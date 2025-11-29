@@ -56,30 +56,6 @@ h2 {
   margin: 20px 0;
 }
 
-.button-block button {
-  background: none;
-  border: none;
-  color: white;
-  font-size: 24px;
-  font-weight: bold;
-  cursor: pointer;
-  text-transform: uppercase;
-  padding: 10px 20px;
-  transition: none;
-  transform: none !important;
-  outline: none !important;
-  -webkit-tap-highlight-color: transparent;
-  user-select: none;
-}
-
-.button-block button:hover {
-  opacity: 0.8;
-}
-
-.button-block button:active {
-  transform: none !important;
-}
-
 /* ===== LAYOUT ===== */
 .container {
   display: flex;
@@ -91,7 +67,7 @@ h2 {
 /* ===== SIDEBAR ===== */
 .sidebar {
   width: var(--sidebar-width);
-  background-color: rgba(30, 41, 59, 0.9);
+  background-image: var(--logo-bg);
   padding: 30px 20px;
 }
 
