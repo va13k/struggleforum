@@ -7,7 +7,7 @@ export default function Home() {
         <h1 className="text-5xl">Struggle Forum</h1>
         <h3 className="text-3xl text-sky-400">Struggle shapes the world</h3>
       </div>
-      <Video src="/istruggle_video.mp4" className="m-auto w-full" />
+      <Video src="istruggle_video.mp4" className="m-auto w-full" />
       <div className="flex flex-col justify-center items-center text-left bg-slate-800/80 shadow-[0_2px_10px_rgba(0,0,0,0.3)] rounded-2xl p-10 text-xl">
         <h3 className="text-3xl mb-4">Philosophy of Struggle</h3>
         <p className="mb-3">
