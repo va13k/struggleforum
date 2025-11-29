@@ -6,7 +6,13 @@ const repoName = "struggleforum";
 
 const nextConfig: NextConfig = {
   output: "export",
-  assetPrefix: isProd ? "." : undefined,
+  basePath: isProd ? `/${repoName}` : undefined,
+  assetPrefix: isProd ? `/${repoName}/` : undefined,
+  images: { unoptimized: true },
+  trailingSlash: true,
+  env: {
+    NEXT_PUBLIC_BASE_PATH: isProd ? `/${repoName}` : "",
+  },
 };
 
 export default nextConfig;
