@@ -21,7 +21,10 @@ export default function Header() {
   );
 
   return (
-    <header className="sticky py-2.5 px-5 text-2xl font-bold text-white bg-slate-800/80 shadow-[0_2px_10px_rgba(0,0,0,0.3)] z-20 flex justify-between items-center">
+    <header
+      className="fixed top-0 left-0 right-0 py-2.5 px-5 text-2xl font-bold text-white bg-slate-800/80 shadow-[0_2px_10px_rgba(0,0,0,0.3)] z-50 flex justify-between items-center"
+      style={{ height: "var(--header-height)" }}
+    >
       <Link href="/">
         <span className="text-5xl font-bold text-sky-400 opacity-80  pointer-events-none select-none transform-none text-glow-cyan">
           SF
