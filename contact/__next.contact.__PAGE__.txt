@@ -1,5 +1,5 @@
 1:"$Sreact.fragment"
-2:I[97367,["./_next/static/chunks/ff1a16fafef87110.js","./_next/static/chunks/247eb132b7f7b574.js"],"OutletBoundary"]
+2:I[97367,["/struggleforum/_next/static/chunks/ff1a16fafef87110.js","/struggleforum/_next/static/chunks/247eb132b7f7b574.js"],"OutletBoundary"]
 3:"$Sreact.suspense"
-0:{"buildId":"7GsERe2EEkqty2ZCz8J8V","rsc":["$","$1","c",{"children":[["$","div",null,{"className":"min-h-screen flex justify-center items-center","children":"Contact page!"}],null,["$","$L2",null,{"children":["$","$3",null,{"name":"Next.MetadataOutlet","children":"$@4"}]}]]}],"loading":null,"isPartial":false}
+0:{"buildId":"NIH0BohydZ5pYNK2j3rlX","rsc":["$","$1","c",{"children":[["$","div",null,{"className":"min-h-screen flex justify-center items-center","children":"Contact page!"}],null,["$","$L2",null,{"children":["$","$3",null,{"name":"Next.MetadataOutlet","children":"$@4"}]}]]}],"loading":null,"isPartial":false}
 4:null
