@@ -1,9 +1,10 @@
+import PageWrapper from "@/components/UI/PageWrapper";
 import TextBox from "@/components/UI/TextBox";
 import ParagraphLayout from "@/components/UI/ParagraphLayout";
 
 export default function AboutPage() {
   return (
-    <div className="min-h-screen w-[80%] flex flex-col gap-6 justify-center pt-5 pb-5">
+    <PageWrapper>
       <div className="text-left">
         <h1 className="text-5xl">About Struggle</h1>
         <h3 className="text-3xl text-sky-400">Struggle shapes the world</h3>
@@ -46,6 +47,6 @@ export default function AboutPage() {
           for those who seek the path.
         </ParagraphLayout>
       </TextBox>
-    </div>
+    </PageWrapper>
   );
 }

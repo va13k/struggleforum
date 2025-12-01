@@ -1,14 +1,16 @@
 import Video from "@/components/Video";
 import TextBox from "@/components/UI/TextBox";
 import ParagraphLayout from "@/components/UI/ParagraphLayout";
+import PageWrapper from "@/components/UI/PageWrapper";
+import PageHeader from "@/components/UI/PageHeader";
 
 export default function Home() {
   return (
-    <div className="min-h-screen w-[80%] flex flex-col gap-6 justify-center pt-5 pb-5">
-      <div className="text-left">
+    <PageWrapper>
+      <PageHeader>
         <h1 className="text-5xl">Struggle Forum</h1>
         <h3 className="text-3xl text-sky-400">Struggle shapes the world</h3>
-      </div>
+      </PageHeader>
       <Video src="main-video.mp4" className="m-auto w-[80%] rounded-3xl" />
       <TextBox>
         <h3 className="text-3xl mb-4">Philosophy of Struggle</h3>
@@ -52,6 +54,6 @@ export default function Home() {
           and freer.
         </ParagraphLayout>
       </TextBox>
-    </div>
+    </PageWrapper>
   );
 }
