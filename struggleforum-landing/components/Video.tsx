@@ -7,10 +7,10 @@ type Props = {
 
 export default function Video({ src, className }: Props) {
   return (
-    <div className={["video-block", className].join(" ")}>
+    <div className={className}>
       <video
+        className="w-full rounded-2xl"
         controls
-        className="w-full h-auto rounded-lg"
         src={src}
         preload="metadata"
       />
