@@ -1,9 +1,14 @@
 import "./global.css";
-import { ReactNode } from "react";
+import React from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import BackgroundProvider from "@/components/UI/BackgroundProvider";
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="en">
       <head>
@@ -18,20 +23,12 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           rel="stylesheet"
         />
       </head>
-      <body
-        className="min-h-screen flex flex-col items-center pt-[70px]"
-        style={{
-          ["--main-bg" as any]: `url(${
-            process.env.NEXT_PUBLIC_BASE_PATH ?? ""
-          }/pexels-horribils-20276206.jpg)`,
-          ["--logo-bg" as any]: `url(${
-            process.env.NEXT_PUBLIC_BASE_PATH ?? ""
-          }/Struggleend.png)`,
-        }}
-      >
-        <Header />
-        {children}
-        <Footer />
+      <body>
+        <BackgroundProvider>
+          <Header />
+          {children}
+          <Footer />
+        </BackgroundProvider>
       </body>
     </html>
   );
