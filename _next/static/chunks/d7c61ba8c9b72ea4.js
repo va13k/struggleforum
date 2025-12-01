@@ -1,0 +1,1 @@
+(globalThis.TURBOPACK||(globalThis.TURBOPACK=[])).push(["object"==typeof document?document.currentScript:void 0,59468,e=>{"use strict";var s=e.i(43476);function t({src:e,className:t}){return(0,s.jsx)("div",{className:t,children:(0,s.jsx)("video",{className:"w-full rounded-2xl",controls:!0,src:e,preload:"metadata"})})}e.s(["default",()=>t])}]);
