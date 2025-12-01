@@ -1,5 +1,9 @@
 1:"$Sreact.fragment"
-2:I[97367,["/struggleforum/_next/static/chunks/ff1a16fafef87110.js","/struggleforum/_next/static/chunks/247eb132b7f7b574.js"],"OutletBoundary"]
-3:"$Sreact.suspense"
-0:{"buildId":"NGNaA4JfsEdR8V_DkWnMA","rsc":["$","$1","c",{"children":[["$","div",null,{"className":"min-h-screen flex justify-center items-center","children":"Contact page!"}],null,["$","$L2",null,{"children":["$","$3",null,{"name":"Next.MetadataOutlet","children":"$@4"}]}]]}],"loading":null,"isPartial":false}
-4:null
+2:I[47257,["/struggleforum/_next/static/chunks/ff1a16fafef87110.js","/struggleforum/_next/static/chunks/247eb132b7f7b574.js"],"ClientPageRoot"]
+3:I[69139,["/struggleforum/_next/static/chunks/853005a70a9e007f.js","/struggleforum/_next/static/chunks/d9a76fb867d7b6d7.js"],"default"]
+6:I[97367,["/struggleforum/_next/static/chunks/ff1a16fafef87110.js","/struggleforum/_next/static/chunks/247eb132b7f7b574.js"],"OutletBoundary"]
+7:"$Sreact.suspense"
+0:{"buildId":"HoCSazUEtRuT0Ol0aMqzi","rsc":["$","$1","c",{"children":[["$","$L2",null,{"Component":"$3","serverProvidedParams":{"searchParams":{},"params":{},"promises":["$@4","$@5"]}}],[["$","script","script-0",{"src":"/struggleforum/_next/static/chunks/d9a76fb867d7b6d7.js","async":true}]],["$","$L6",null,{"children":["$","$7",null,{"name":"Next.MetadataOutlet","children":"$@8"}]}]]}],"loading":null,"isPartial":false}
+4:{}
+5:{}
+8:null
