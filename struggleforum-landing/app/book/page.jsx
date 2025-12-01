@@ -45,7 +45,7 @@ export default function BookPage() {
             act deliberately rather than reactively. It teaches awareness,
             discipline, and turning resistance into opportunity.
           </ParagraphLayout>
-          <ParagraphLayout className="mb-6">
+          <ParagraphLayout className="mb-0">
             Ideal for anyone seeking clarity, resilience, and strategic
             thinking. Life is struggle — and "Shards of Struggle" is your
             compass to face it consciously.
