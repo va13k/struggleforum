@@ -1,7 +1,7 @@
 @import "tailwindcss";
 :root {
   --header-height: 70px;
-  --main-bg: url("/pexels-horribils-20276206.jpg");
+  --main-bg: url("/main-bg.jpg");
   --logo-bg: url("/Struggleend.png");
   --logo-width: 190px;
   --logo-top: var(--header-height);

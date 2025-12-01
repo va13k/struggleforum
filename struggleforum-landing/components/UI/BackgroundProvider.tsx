@@ -20,11 +20,13 @@ export default function BackgroundProvider({ children }: PropsWithChildren) {
 
   const base = process.env.NEXT_PUBLIC_BASE_PATH || "";
   const fullUrl = `${base}${bg}`;
+  const logoUrl = `${base}/Struggleend.png`;
 
   useEffect(() => {
     document.body.style.setProperty("--main-bg", `url(${fullUrl})`);
+    document.body.style.setProperty("--logo-bg", `url(${logoUrl})`);
     return () => {};
-  }, [fullUrl]);
+  }, [fullUrl, logoUrl]);
 
   return (
     <div className="min-h-screen flex flex-col items-center pt-[70px]">
