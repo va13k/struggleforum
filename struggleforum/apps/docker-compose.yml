@@ -1,0 +1,16 @@
+version: "3.8"
+services:
+  db:
+    image: postgres:16
+    container_name: struggleforum-db
+    environment:
+      POSTGRES_USER: struggle
+      POSTGRES_PASSWORD: Struggle&&Ub3r&&4ll3s!
+      POSTGRES_DB: struggleforum
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:

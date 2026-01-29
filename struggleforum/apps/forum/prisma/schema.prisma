@@ -1,0 +1,38 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id      String @id @default(cuid())
+  name    String
+  email   String @unique
+  role    Role
+  posts   Post[]
+  country String
+  profile Profile?
+}
+
+model Profile {
+  id     String @id @default(cuid())
+  userId String @unique
+  bio    String?
+  user   User @relation(fields: [userId], references: [id])
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model Post {
+  id        String @id @default(cuid())
+  title     String
+  published Boolean @default(true)
+  authorId  String
+  author    User @relation(fields: [authorId], references: [id])
+  likes     Int @default(0)
+}
