@@ -2,7 +2,7 @@
   "compilerOptions": {
     "target": "ES2017",
     "lib": ["dom", "dom.iterable", "esnext"],
-    "allowJs": true,
+    "allowJs": false,
     "skipLibCheck": true,
     "strict": true,
     "noEmit": true,
@@ -29,7 +29,8 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
     "**/*.mts",
-    "**/*.css"
-, "tailwind.config.js"  ],
+    "**/*.css",
+    "tailwind.config.js"
+, "../../packages/ui/CTButton.tsx", "../../packages/ui/PageWrapper.tsx"  ],
   "exclude": ["node_modules"]
 }

@@ -15,7 +15,7 @@ export default function BackgroundProvider({ children }: PropsWithChildren) {
   const pathname = usePathname();
   const bg = useMemo(
     () => bgmap.find((x) => x.test(pathname))?.url ?? "/main-bg.jpg",
-    [pathname]
+    [pathname],
   );
 
   const base = process.env.NEXT_PUBLIC_BASE_PATH || "";
@@ -29,7 +29,7 @@ export default function BackgroundProvider({ children }: PropsWithChildren) {
   }, [fullUrl, logoUrl]);
 
   return (
-    <div className="min-h-screen flex flex-col items-center pt-[70px]">
+    <div className="min-h-screen flex flex-col items-center pt-17.5">
       {children}
     </div>
   );

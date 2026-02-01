@@ -1,5 +1,5 @@
 import Image from "next/image";
-import PageWrapper from "@/components/UI/PageWrapper";
+import { PageWrapper } from "@struggleforum/ui";
 import PageHeader from "@/components/UI/PageHeader";
 import TextBox from "@/components/UI/TextBox";
 import ParagraphLayout from "@/components/UI/ParagraphLayout";
@@ -21,7 +21,7 @@ export default function BookPage() {
       <div className="flex flex-col lg:flex-row items-center justify-center gap-8 lg:gap-10 w-full">
         <Link
           href="https://www.amazon.com/dp/B0G1VWHQFZ"
-          className="w-full max-w-[400px] sm:max-w-[320px] lg:max-w-[420px] rounded-2xl overflow-hidden transition-transform duration-500 hover:scale-105"
+          className="w-full max-w-100 sm:max-w-[320px] lg:max-w-105 rounded-2xl overflow-hidden transition-transform duration-500 hover:scale-105"
         >
           <Image
             src={base + "/Sbook.jpg"}

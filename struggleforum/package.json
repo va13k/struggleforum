@@ -1,0 +1,15 @@
+{
+  "name": "struggleforum",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:forum": "npm run dev -w @struggleforum/forum",
+    "dev:landing": "npm run dev -w @struggleforum/landing",
+    "build": "npm run build --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present"
+  }
+}

@@ -1,5 +1,5 @@
 {
-  "name": "struggleforum-landing",
+  "name": "@struggleforum/landing",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -7,9 +7,11 @@
     "build": "next build",
     "start": "next start",
     "deploy": "npm run build && touch out/.nojekyll && gh-pages -d out --dotfiles",
-    "lint": "eslint"
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.90.20",
     "next": "16.0.4",
     "react": "19.2.0",
     "react-dom": "19.2.0",

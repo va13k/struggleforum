@@ -1,4 +1,4 @@
-import PageWrapper from "@/components/UI/PageWrapper";
+import { PageWrapper } from "@struggleforum/ui";
 import TextBox from "@/components/UI/TextBox";
 import ParagraphLayout from "@/components/UI/ParagraphLayout";
 

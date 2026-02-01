@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "ES2017",
+    "target": "ES2023",
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
@@ -18,8 +18,15 @@
         "name": "next"
       }
     ],
+    "baseUrl": ".",
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"],
+      "@/app/*": ["app/*"],
+      "@/src/*": ["src/*"],
+      "@/features/*": ["src/features/*"],
+      "@/server/*": ["src/server/*"],
+      "@/components/*": ["src/components/*"],
+      "@/lib/*": ["src/lib/*"]
     }
   },
   "include": [
@@ -30,5 +37,6 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules"],
+  "extends": "../../packages/tsconfig/nextjs.json"
 }

@@ -1,10 +1,10 @@
 "use client";
 
-import PageWrapper from "@/components/UI/PageWrapper";
+import { PageWrapper } from "@struggleforum/ui";
 import PageHeader from "@/components/UI/PageHeader";
 import TextBox from "@/components/UI/TextBox";
 import ParagraphLayout from "@/components/UI/ParagraphLayout";
-import CTButton from "@/components/UI/CTButton";
+import { CTButton } from "@struggleforum/ui";
 import { useState } from "react";
 
 export default function ContactPage() {
@@ -30,7 +30,7 @@ export default function ContactPage() {
   };
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -111,13 +111,13 @@ export default function ContactPage() {
             variant="primary"
             size="lg"
             className="mt-2"
-            onClick={handleSubmit}
+            onClick={() => handleSubmit}
           >
             {status === "sending"
               ? "Sending..."
               : status === "success"
-              ? "Sent! ✓"
-              : "Send Message"}
+                ? "Sent! ✓"
+                : "Send Message"}
           </CTButton>
 
           {status === "success" && (

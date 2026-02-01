@@ -1,9 +1,9 @@
-import PageWrapper from "@/components/UI/PageWrapper";
+import { PageWrapper } from "@struggleforum/ui";
 import PageHeader from "@/components/UI/PageHeader";
 import TextBox from "@/components/UI/TextBox";
 import ParagraphLayout from "@/components/UI/ParagraphLayout";
 import Image from "next/image";
-import CTButton from "@/components/UI/CTButton";
+import { CTButton } from "@struggleforum/ui";
 
 export default function CoordinationPage() {
   const base = process.env.NEXT_PUBLIC_BASE_PATH || "";

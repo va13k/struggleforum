@@ -42,3 +42,17 @@ yarn-error.log*
 
 # typescript
 *.tsbuildinfo
+
+# prisma
+.prisma
+
+# local db
+*.db
+*.sqlite
+
+# docker dev junk
+docker-data/
+
+# caches
+.turbo
+.bun

@@ -1,7 +1,7 @@
 import Video from "@/components/Video";
 import TextBox from "@/components/UI/TextBox";
 import ParagraphLayout from "@/components/UI/ParagraphLayout";
-import PageWrapper from "@/components/UI/PageWrapper";
+import { PageWrapper } from "@struggleforum/ui";
 import PageHeader from "@/components/UI/PageHeader";
 
 export default function Home() {
