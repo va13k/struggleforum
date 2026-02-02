@@ -42,7 +42,7 @@ export default function ContactPage() {
         <h3 className="text-3xl text-sky-400">Reach out to Struggle Forum</h3>
       </PageHeader>
 
-      <TextBox className="max-w-[900px] mx-auto w-full">
+      <TextBox className="max-w-225 mx-auto w-full">
         <h3 className="text-3xl mb-4">Get in Touch</h3>
         <ParagraphLayout className="mb-6">
           Have questions, feedback, or want to collaborate? Fill out the form
@@ -127,7 +127,6 @@ export default function ContactPage() {
           )}
         </form>
 
-        {/* Direct Contact Info */}
         <div className="mt-8 pt-8 border-t border-slate-600"></div>
       </TextBox>
     </PageWrapper>

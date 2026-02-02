@@ -38,7 +38,8 @@ body::before {
 }
 
 .text-glow-cyan {
-  text-shadow: 0 0 15px rgba(56, 189, 248, 0.6),
+  text-shadow:
+    0 0 15px rgba(56, 189, 248, 0.6),
     0 0 30px rgba(56, 189, 248, 0.4);
 }
 
@@ -69,44 +70,6 @@ h2 {
   width: var(--sidebar-width);
   background-image: var(--logo-bg);
   padding: 30px 20px;
-}
-
-.sidebar ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.sidebar ul li {
-  margin-bottom: 20px;
-}
-
-.sidebar ul li a {
-  color: #cbd5e1;
-  text-decoration: none;
-  font-size: 18px;
-  transition: color 0.3s, font-style 0.3s;
-  transform: none !important;
-  outline: none !important;
-  -webkit-tap-highlight-color: transparent;
-  user-select: none;
-}
-
-.sidebar ul li a:hover,
-.sidebar ul li a.active {
-  color: #38bdf8;
-  font-style: normal;
-}
-
-.sidebar ul li a:active {
-  transform: none !important;
-}
-
-/* ===== MAIN ===== */
-main {
-  flex: 1;
-  padding: 60px 40px;
-  text-align: left;
 }
 
 /* ===== TEXT BLOCK ===== */
