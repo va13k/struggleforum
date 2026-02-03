@@ -1,0 +1,1122 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[margin=1in]{geometry}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{xcolor}
+
+% Code listing settings
+\lstset{
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    frame=single,
+    backgroundcolor=\color{gray!10}
+}
+
+\title{StruggleForum: Minimal Viable Product Specification}
+\author{}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\tableofcontents
+\newpage
+
+\section{Introduction}
+This document defines the minimal viable product (MVP) specification for StruggleForum, including the core data models, API endpoints, permission rules, and session management requirements. The specification includes technology-specific implementation details using the chosen stack.
+
+\subsection{Technology stack}
+To implement the MVP for the StruggleForum the following technologies are used:
+\begin{enumerate}
+  \item Postgres 16 for the DB
+  \item NextJS framework for backend and frontend
+  \item Prisma ORM to have easily written queries to the db using TS(JS).
+  \item ReactJS library for the frontend
+  \item TypeScript for more strict typing
+\end{enumerate}
+
+\section{Data Models}
+
+This section describes the core entities in the forum system.
+
+\subsection{User}
+\begin{itemize}
+    \item \textbf{Fields:}
+    \begin{itemize}
+        \item \texttt{id}: String (UUID, default: uuid())
+        \item \texttt{username}: String (unique)
+        \item \texttt{email}: String (unique)
+        \item \texttt{password\_hash}: String
+        \item \texttt{role}: Enum (USER, ADMIN) - default: USER
+        \item \texttt{created\_at}: DateTime (default: now())
+        \item \texttt{updated\_at}: DateTime (updatedAt)
+    \end{itemize}
+    \item \textbf{Constraints:}
+    \begin{itemize}
+        \item Username must be unique
+        \item Email must be unique and valid
+    \end{itemize}
+\end{itemize}
+
+\newpage
+\textbf{Prisma Schema:}
+\begin{lstlisting}
+model User {
+  id            String    @id @default(uuid())
+  username      String    @unique
+  email         String    @unique
+  passwordHash  String    @map("password_hash")
+  role          Role      @default(USER)
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+  
+  sessions      Session[]
+  posts         Post[]
+  comments      Comment[]
+  likes         Like[]
+  notifications Notification[]
+  
+  @@map("users")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+\end{lstlisting}
+
+\textbf{TypeScript Type:}
+\begin{lstlisting}
+type User = {
+  id: string;
+  username: string;
+  email: string;
+  passwordHash: string;
+  role: 'USER' | 'ADMIN';
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+type UserPublic = Omit<User, 'passwordHash'>;
+\end{lstlisting}
+
+\subsection{Session}
+\begin{itemize}
+    \item \textbf{Fields:}
+    \begin{itemize}
+        \item \texttt{id}: String (UUID, default: uuid())
+        \item \texttt{user\_id}: String (Foreign key to User)
+        \item \texttt{token}: String (unique)
+        \item \texttt{created\_at}: DateTime (default: now())
+        \item \texttt{last\_activity}: DateTime
+        \item \texttt{expires\_at}: DateTime
+    \end{itemize}
+    \item \textbf{Rules:}
+    \begin{itemize}
+        \item Sessions expire after \textbf{2 hours of inactivity}
+        \item Last activity timestamp updates on each authenticated request
+    \end{itemize}
+\end{itemize}
+
+\newpage
+\textbf{Prisma Schema:}
+\begin{lstlisting}
+model Session {
+  id           String   @id @default(uuid())
+  userId       String   @map("user_id")
+  token        String   @unique
+  createdAt    DateTime @default(now()) @map("created_at")
+  lastActivity DateTime @map("last_activity")
+  expiresAt    DateTime @map("expires_at")
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([token])
+  @@map("sessions")
+}
+\end{lstlisting}
+
+\textbf{TypeScript Type:}
+\begin{lstlisting}
+type Session = {
+  id: string;
+  userId: string;
+  token: string;
+  createdAt: Date;
+  lastActivity: Date;
+  expiresAt: Date;
+};
+\end{lstlisting}
+
+\subsection{Post}
+\begin{itemize}
+    \item \textbf{Fields:}
+    \begin{itemize}
+        \item \texttt{id}: String (UUID, default: uuid())
+        \item \texttt{author\_id}: String (Foreign key to User)
+        \item \texttt{category\_id}: String (Foreign key to Category)
+        \item \texttt{title}: String
+        \item \texttt{content}: String (Text)
+        \item \texttt{locked}: Boolean (default: false)
+        \item \texttt{created\_at}: DateTime (default: now())
+        \item \texttt{updated\_at}: DateTime (updatedAt)
+    \end{itemize}
+    \item \textbf{Constraints:}
+    \begin{itemize}
+        \item Title is required
+        \item Content is required
+        \item Category is required
+    \end{itemize}
+    \item \textbf{Moderation:}
+    \begin{itemize}
+        \item \texttt{locked}: Prevents new comments (admin only)
+    \end{itemize}
+\end{itemize}
+
+\newpage
+\textbf{Prisma Schema:}
+\begin{lstlisting}
+model Post {
+  id         String    @id @default(uuid())
+  authorId   String    @map("author_id")
+  categoryId String    @map("category_id")
+  title      String
+  content    String    @db.Text
+  locked     Boolean   @default(false)
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+  
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  category  Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  comments  Comment[]
+  likes     Like[]
+  
+  @@index([authorId])
+  @@index([categoryId])
+  @@index([createdAt])
+  @@map("posts")
+}
+\end{lstlisting}
+
+\textbf{TypeScript Types:}
+\begin{lstlisting}
+type Post = {
+  id: string;
+  authorId: string;
+  categoryId: string;
+  title: string;
+  content: string;
+  locked: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+type PostWithRelations = Post & {
+  author: UserPublic;
+  category: Category;
+  _count: {
+    likes: number;
+    comments: number;
+  };
+};
+\end{lstlisting}
+
+\subsection{Comment}
+\begin{itemize}
+    \item \textbf{Fields:}
+    \begin{itemize}
+        \item \texttt{id}: String (UUID, default: uuid())
+        \item \texttt{post\_id}: String (Foreign key to Post)
+        \item \texttt{author\_id}: String (Foreign key to User)
+        \item \texttt{parent\_id}: String (Foreign key to Comment, optional)
+        \item \texttt{content}: String (Text)
+        \item \texttt{depth}: Int (default: 0)
+        \item \texttt{locked}: Boolean (default: false)
+        \item \texttt{created\_at}: DateTime (default: now())
+        \item \texttt{updated\_at}: DateTime (updatedAt)
+    \end{itemize}
+    \item \textbf{Constraints:}
+    \begin{itemize}
+        \item Content is required
+    \end{itemize}
+    \item \textbf{Nested Replies:}
+    \begin{itemize}
+        \item Comments can reply to other comments via \texttt{parent\_id}
+        \item Top-level comments have \texttt{parent\_id = null} and \texttt{depth = 0}
+        \item Each reply increments the depth level
+    \end{itemize}
+    \item \textbf{Moderation:}
+    \begin{itemize}
+        \item \texttt{locked}: Prevents replies to this comment (admin only)
+    \end{itemize}
+\end{itemize}
+
+\newpage
+\textbf{Prisma Schema:}
+\begin{lstlisting}
+model Comment {
+  id        String    @id @default(uuid())
+  postId    String    @map("post_id")
+  authorId  String    @map("author_id")
+  parentId  String?   @map("parent_id")
+  content   String    @db.Text
+  depth     Int       @default(0)
+  locked    Boolean   @default(false)
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  
+  post    Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author  User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  parent  Comment? @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies Comment[] @relation("CommentReplies")
+  likes   Like[]
+  
+  @@index([postId])
+  @@index([authorId])
+  @@index([parentId])
+  @@map("comments")
+}
+\end{lstlisting}
+
+\textbf{TypeScript Types:}
+\begin{lstlisting}
+type Comment = {
+  id: string;
+  postId: string;
+  authorId: string;
+  parentId: string | null;
+  content: string;
+  depth: number;
+  locked: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+type CommentWithAuthor = Comment & {
+  author: UserPublic;
+  _count: {
+    likes: number;
+  };
+};
+
+type CommentWithReplies = CommentWithAuthor & {
+  replies: CommentWithAuthor[];
+};
+\end{lstlisting}
+
+\subsection{Category}
+\begin{itemize}
+    \item \textbf{Fields:}
+    \begin{itemize}
+        \item \texttt{id}: String (UUID, default: uuid())
+        \item \texttt{name}: String (unique)
+        \item \texttt{description}: String (optional)
+        \item \texttt{created\_at}: DateTime (default: now())
+    \end{itemize}
+    \item \textbf{Relationships:}
+    \begin{itemize}
+        \item One-to-many relationship with Post
+        \item Each post belongs to exactly one category
+    \end{itemize}
+    \item \textbf{Constraints:}
+    \begin{itemize}
+        \item Name must be unique
+    \end{itemize}
+\end{itemize}
+
+\newpage
+\textbf{Prisma Schema:}
+\begin{lstlisting}
+model Category {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  
+  posts Post[]
+  
+  @@map("categories")
+}
+\end{lstlisting}
+
+\textbf{TypeScript Type:}
+\begin{lstlisting}
+type Category = {
+  id: string;
+  name: string;
+  description: string | null;
+  createdAt: Date;
+};
+
+type CategoryWithCount = Category & {
+  _count: {
+    posts: number;
+  };
+};
+\end{lstlisting}
+
+\subsection{Notification}
+\begin{itemize}
+    \item \textbf{Fields:}
+    \begin{itemize}
+        \item \texttt{id}: String (UUID, default: uuid())
+        \item \texttt{user\_id}: String (Foreign key to User)
+        \item \texttt{type}: Enum (COMMENT, LIKE, MENTION)
+        \item \texttt{content}: String
+        \item \texttt{reference\_id}: String (optional)
+        \item \texttt{is\_read}: Boolean (default: false)
+        \item \texttt{created\_at}: DateTime (default: now())
+    \end{itemize}
+\end{itemize}
+
+\newpage
+\textbf{Prisma Schema:}
+\begin{lstlisting}
+model Notification {
+  id          String           @id @default(uuid())
+  userId      String           @map("user_id")
+  type        NotificationType
+  content     String
+  referenceId String?          @map("reference_id")
+  isRead      Boolean          @default(false) @map("is_read")
+  createdAt   DateTime         @default(now()) @map("created_at")
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([isRead])
+  @@map("notifications")
+}
+
+enum NotificationType {
+  COMMENT
+  LIKE
+  MENTION
+}
+\end{lstlisting}
+
+\textbf{TypeScript Type:}
+\begin{lstlisting}
+type Notification = {
+  id: string;
+  userId: string;
+  type: 'COMMENT' | 'LIKE' | 'MENTION';
+  content: string;
+  referenceId: string | null;
+  isRead: boolean;
+  createdAt: Date;
+};
+\end{lstlisting}
+
+\subsection{Like}
+\begin{itemize}
+    \item \textbf{Fields:}
+    \begin{itemize}
+        \item \texttt{id}: String (UUID, default: uuid())
+        \item \texttt{user\_id}: String (Foreign key to User)
+        \item \texttt{post\_id}: String (Foreign key to Post, optional)
+        \item \texttt{comment\_id}: String (Foreign key to Comment, optional)
+        \item \texttt{created\_at}: DateTime (default: now())
+    \end{itemize}
+    \item \textbf{Constraints:}
+    \begin{itemize}
+        \item User can like an entity only once
+        \item Either postId or commentId must be set (not both)
+    \end{itemize}
+\end{itemize}
+
+\newpage
+\textbf{Prisma Schema:}
+\begin{lstlisting}
+model Like {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  postId    String?  @map("post_id")
+  commentId String?  @map("comment_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post    Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  comment Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, postId])
+  @@unique([userId, commentId])
+  @@index([userId])
+  @@index([postId])
+  @@index([commentId])
+  @@map("likes")
+}
+\end{lstlisting}
+
+\textbf{TypeScript Type:}
+\begin{lstlisting}
+type Like = {
+  id: string;
+  userId: string;
+  postId: string | null;
+  commentId: string | null;
+  createdAt: Date;
+};
+\end{lstlisting}
+
+\section{API Endpoints}
+
+This section defines the required endpoints for the forum API.
+
+\subsection{Authentication Endpoints}
+
+\subsubsection{POST /api/auth/register}
+\textbf{File:} \texttt{app/api/auth/register/route.ts}
+
+\textbf{Request:}
+\begin{lstlisting}
+{
+  "username": "string",
+  "email": "string",
+  "password": "string"
+}
+\end{lstlisting}
+
+\textbf{Response (201):}
+\begin{lstlisting}
+{
+  "user": {
+    "id": "uuid",
+    "username": "string",
+    "email": "string",
+    "role": "USER",
+    "createdAt": "2026-02-02T10:00:00.000Z"
+  },
+  "token": "string"
+}
+\end{lstlisting}
+
+\newpage
+\textbf{Next.js Implementation Example:}
+\begin{lstlisting}
+import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
+import bcrypt from 'bcryptjs';
+import { generateToken } from '@/lib/auth';
+
+export async function POST(req: NextRequest) {
+  const { username, email, password } = await req.json();
+  
+  // Hash password
+  const passwordHash = await bcrypt.hash(password, 10);
+  
+  // Create user
+  const user = await prisma.user.create({
+    data: { username, email, passwordHash },
+  });
+  
+  // Create session
+  const token = generateToken();
+  await prisma.session.create({
+    data: {
+      userId: user.id,
+      token,
+      lastActivity: new Date(),
+      expiresAt: new Date(Date.now() + 2 * 60 * 60 * 1000),
+    },
+  });
+  
+  const { passwordHash: _, ...userPublic } = user;
+  return NextResponse.json({ user: userPublic, token }, { status: 201 });
+}
+\end{lstlisting}
+
+\subsubsection{POST /api/auth/login}
+\textbf{Request:}
+\begin{lstlisting}
+{
+  "email": "string",
+  "password": "string"
+}
+\end{lstlisting}
+
+\textbf{Response (200):}
+\begin{lstlisting}
+{
+  "user": {
+    "id": "uuid",
+    "username": "string",
+    "email": "string",
+    "role": "string"
+  },
+  "token": "string"
+}
+\end{lstlisting}
+
+\subsubsection{POST /api/auth/logout}
+\textbf{Headers:} Authorization: Bearer \{token\}
+
+\textbf{Response (200):}
+\begin{lstlisting}
+{
+  "message": "Logged out successfully"
+}
+\end{lstlisting}
+
+\subsection{Post Endpoints}
+
+\subsubsection{GET /api/posts}
+\textbf{Query Parameters:}
+\begin{itemize}
+    \item \texttt{page}: Page number (default: 1)
+    \item \texttt{limit}: Items per page (default: 20)
+    \item \texttt{category}: Filter by category ID
+\end{itemize}
+
+\textbf{Response (200):}
+\begin{lstlisting}
+{
+  "posts": [
+    {
+      "id": "uuid",
+      "title": "string",
+      "content": "string",
+      "author": { "id": "uuid", "username": "string" },
+      "category": { "id": "uuid", "name": "string" },
+      "like_count": 0,
+      "comment_count": 0,
+      "created_at": "timestamp",
+      "updated_at": "timestamp"
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 20,
+    "total": 100
+  }
+}
+\end{lstlisting}
+
+\subsubsection{GET /api/posts/:id}
+\textbf{Response (200):}
+\begin{lstlisting}
+{
+  "id": "uuid",
+  "title": "string",
+  "content": "string",
+  "author": { "id": "uuid", "username": "string" },
+  "category": { "id": "uuid", "name": "string" },
+  "like_count": 0,
+  "comment_count": 0,
+  "created_at": "timestamp",
+  "updated_at": "timestamp"
+}
+\end{lstlisting}
+
+\subsubsection{POST /api/posts}
+\textbf{Headers:} Authorization: Bearer \{token\}
+
+\textbf{Request:}
+\begin{lstlisting}
+{
+  "title": "string",
+  "content": "string",
+  "categoryId": "uuid"
+}
+\end{lstlisting}
+
+\textbf{Response (201):}
+\begin{lstlisting}
+{
+  "id": "uuid",
+  "title": "string",
+  "content": "string",
+  "author": { "id": "uuid", "username": "string" },
+  "category": { "id": "uuid", "name": "string" },
+  "created_at": "timestamp",
+  "updated_at": "timestamp"
+}
+\end{lstlisting}
+
+\subsubsection{PUT /api/posts/:id}
+\textbf{Headers:} Authorization: Bearer \{token\}
+
+\textbf{Request:}
+\begin{lstlisting}
+{
+  "title": "string",
+  "content": "string",
+  "categoryId": "uuid"
+}
+\end{lstlisting}
+
+\textbf{Response (200):}
+\begin{lstlisting}
+{
+  "id": "uuid",
+  "title": "string",
+  "content": "string",
+  "category": { "id": "uuid", "name": "string" },
+  "updated_at": "timestamp"
+}
+\end{lstlisting}
+
+\subsubsection{DELETE /api/posts/:id}
+\textbf{Headers:} Authorization: Bearer \{token\}
+
+\textbf{Response (200):}
+\begin{lstlisting}
+{
+  "message": "Post deleted successfully"
+}
+\end{lstlisting}
+
+\subsection{Comment Endpoints}
+
+\subsubsection{GET /api/posts/:id/comments}
+\textbf{Response (200):}
+\begin{lstlisting}
+{
+  "comments": [
+    {
+      "id": "uuid",
+      "content": "string",
+      "author": { "id": "uuid", "username": "string" },
+      "parentId": null,
+      "depth": 0,
+      "like_count": 0,
+      "created_at": "timestamp",
+      "updated_at": "timestamp",
+      "replies": [
+        {
+          "id": "uuid",
+          "content": "string",
+          "author": { "id": "uuid", "username": "string" },
+          "parentId": "parent-uuid",
+          "depth": 1,
+          "like_count": 0,
+          "created_at": "timestamp",
+          "updated_at": "timestamp",
+          "replies": []
+        }
+      ]
+    }
+  ]
+}
+\end{lstlisting}
+
+\subsubsection{POST /api/posts/:id/comments}
+\textbf{Headers:} Authorization: Bearer \{token\}
+
+\textbf{Request:}
+\begin{lstlisting}
+{
+  "content": "string",
+  "parentId": "uuid" // Optional: for nested replies
+}
+\end{lstlisting}
+
+\textbf{Response (201):}
+\begin{lstlisting}
+{
+  "id": "uuid",
+  "content": "string",
+  "author": { "id": "uuid", "username": "string" },
+  "parentId": "uuid", // null for top-level comments
+  "depth": 0,
+  "created_at": "timestamp"
+}
+\end{lstlisting}
+
+\subsubsection{PUT /api/comments/:id}
+\textbf{Headers:} Authorization: Bearer \{token\}
+
+\textbf{Request:}
+\begin{lstlisting}
+{
+  "content": "string"
+}
+\end{lstlisting}
+
+\textbf{Response (200):}
+\begin{lstlisting}
+{
+  "id": "uuid",
+  "content": "string",
+  "updated_at": "timestamp"
+}
+\end{lstlisting}
+
+\subsubsection{DELETE /api/comments/:id}
+\textbf{Headers:} Authorization: Bearer \{token\}
+
+\textbf{Response (200):}
+\begin{lstlisting}
+{
+  "message": "Comment deleted successfully"
+}
+\end{lstlisting}
+
+\subsection{Like Endpoints}
+
+\subsubsection{POST /api/likes}
+\textbf{Headers:} Authorization: Bearer \{token\}
+
+\textbf{Request:}
+\begin{lstlisting}
+{
+  "target_type": "post|comment",
+  "target_id": "uuid"
+}
+\end{lstlisting}
+
+\textbf{Response (201):}
+\begin{lstlisting}
+{
+  "id": "uuid",
+  "target_type": "string",
+  "target_id": "uuid",
+  "created_at": "timestamp"
+}
+\end{lstlisting}
+
+\subsubsection{DELETE /api/likes/:id}
+\textbf{Headers:} Authorization: Bearer \{token\}
+
+\textbf{Response (200):}
+\begin{lstlisting}
+{
+  "message": "Like removed successfully"
+}
+\end{lstlisting}
+
+\subsection{Notification Endpoints}
+
+\subsubsection{GET /api/notifications}
+\textbf{Headers:} Authorization: Bearer \{token\}
+
+\textbf{Response (200):}
+\begin{lstlisting}
+{
+  "notifications": [
+    {
+      "id": "uuid",
+      "type": "string",
+      "content": "string",
+      "reference_id": "uuid",
+      "is_read": false,
+      "created_at": "timestamp"
+    }
+  ]
+}
+\end{lstlisting}
+
+\subsubsection{PUT /api/notifications/:id/read}
+\textbf{Headers:} Authorization: Bearer \{token\}
+
+\textbf{Response (200):}
+\begin{lstlisting}
+{
+  "id": "uuid",
+  "is_read": true
+}
+\end{lstlisting}
+
+\subsection{Category Endpoints}
+
+\subsubsection{GET /api/categories}
+\textbf{Response (200):}
+\begin{lstlisting}
+{
+  "categories": [
+    {
+      "id": "uuid",
+      "name": "string",
+      "description": "string",
+      "post_count": 0
+    }
+  ]
+}
+\end{lstlisting}
+
+\subsubsection{POST /api/categories}
+\textbf{Headers:} Authorization: Bearer \{token\} (Admin only)
+
+\textbf{Request:}
+\begin{lstlisting}
+{
+  "name": "string",
+  "description": "string"
+}
+\end{lstlisting}
+
+\textbf{Response (201):}
+\begin{lstlisting}
+{
+  "id": "uuid",
+  "name": "string",
+  "description": "string",
+  "created_at": "timestamp"
+}
+\end{lstlisting}
+
+\subsection{Admin/Moderation Endpoints}
+
+\subsubsection{POST /api/admin/posts/:id/lock}
+\textbf{Headers:} Authorization: Bearer \{token\} (Admin only)
+
+\textbf{Response (200):}
+\begin{lstlisting}
+{
+  "id": "uuid",
+  "locked": true
+}
+\end{lstlisting}
+
+\subsubsection{POST /api/admin/posts/:id/unlock}
+\textbf{Headers:} Authorization: Bearer \{token\} (Admin only)
+
+\textbf{Response (200):}
+\begin{lstlisting}
+{
+  "id": "uuid",
+  "locked": false
+}
+\end{lstlisting}
+
+\subsubsection{POST /api/admin/comments/:id/lock}
+\textbf{Headers:} Authorization: Bearer \{token\} (Admin only)
+
+\textbf{Response (200):}
+\begin{lstlisting}
+{
+  "id": "uuid",
+  "locked": true
+}
+\end{lstlisting}
+
+\subsubsection{POST /api/admin/comments/:id/unlock}
+\textbf{Headers:} Authorization: Bearer \{token\} (Admin only)
+
+\textbf{Response (200):}
+\begin{lstlisting}
+{
+  "id": "uuid",
+  "locked": false
+}
+\end{lstlisting}
+
+\section{Permission Rules}
+
+This section defines the authorization rules for different user roles.
+
+\subsection{User Permissions}
+Regular users (\texttt{role: "user"}) can:
+\begin{itemize}
+    \item View all posts and comments (read-only access)
+    \item Create new posts
+    \item Edit their own posts
+    \item Delete their own posts
+    \item Create comments on any post
+    \item Edit their own comments
+    \item Delete their own comments
+    \item Like/unlike posts and comments
+    \item View and manage their own notifications
+\end{itemize}
+
+Users \textbf{cannot}:
+\begin{itemize}
+    \item Edit or delete posts created by other users
+    \item Edit or delete comments created by other users
+    \item Access or manage other users' notifications
+    \item Perform administrative actions
+\end{itemize}
+
+\subsection{Admin Permissions}
+Administrators (\texttt{role: "admin"}) have all user permissions plus:
+\begin{itemize}
+    \item Edit any post (regardless of author)
+    \item Delete any post
+    \item Edit any comment
+    \item Delete any comment
+    \item Create, edit, and delete categories
+    \item View all users
+    \item Moderate content across the platform
+\end{itemize}
+
+\subsection{Anonymous Access}
+Unauthenticated users can:
+\begin{itemize}
+    \item View all posts (read-only)
+    \item View all comments (read-only)
+    \item View categories
+\end{itemize}
+
+Anonymous users \textbf{cannot}:
+\begin{itemize}
+    \item Create, edit, or delete any content
+    \item Like posts or comments
+    \item Access notifications
+\end{itemize}
+
+\section{Session Management}
+
+\subsection{Session Expiry Rule}
+\begin{itemize}
+    \item Sessions expire after \textbf{2 hours of inactivity}
+    \item The \texttt{last\_activity} timestamp is updated on every authenticated API request
+    \item Inactivity is defined as the time elapsed since the \texttt{last\_activity} timestamp
+    \item When a session expires:
+    \begin{itemize}
+        \item The session token becomes invalid
+        \item Subsequent requests with the expired token return 401 Unauthorized
+        \item The user must log in again to obtain a new session token
+    \end{itemize}
+\end{itemize}
+
+\subsection{Session Validation}
+On every authenticated request, the system must:
+\begin{enumerate}
+    \item Verify the session token exists and is valid
+    \item Check if the session has expired (current time - last\_activity > 2 hours)
+    \item If valid: update the \texttt{last\_activity} timestamp to current time
+    \item If expired: return 401 Unauthorized and invalidate the session
+\end{enumerate}
+
+\subsection{Next.js Middleware Implementation}
+\textbf{File:} \texttt{middleware.ts}
+
+\newpage
+\begin{lstlisting}
+import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
+
+export async function middleware(req: NextRequest) {
+  const token = req.headers.get('authorization')?.replace('Bearer ', '');
+  
+  if (!token) {
+    return NextResponse.json(
+      { error: { code: 'UNAUTHORIZED', message: 'No token provided' } },
+      { status: 401 }
+    );
+  }
+  
+  const session = await prisma.session.findUnique({
+    where: { token },
+    include: { user: true },
+  });
+  
+  if (!session) {
+    return NextResponse.json(
+      { error: { code: 'UNAUTHORIZED', message: 'Invalid token' } },
+      { status: 401 }
+    );
+  }
+  
+  // Check if session expired (2 hours of inactivity)
+  const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
+  if (session.lastActivity < twoHoursAgo) {
+    await prisma.session.delete({ where: { id: session.id } });
+    return NextResponse.json(
+      { error: { code: 'SESSION_EXPIRED', message: 'Session expired' } },
+      { status: 401 }
+    );
+  }
+  
+  // Update last activity
+  await prisma.session.update({
+    where: { id: session.id },
+    data: { 
+      lastActivity: new Date(),
+      expiresAt: new Date(Date.now() + 2 * 60 * 60 * 1000),
+    },
+  });
+  
+  // Add user to request headers for route handlers
+  const response = NextResponse.next();
+  response.headers.set('x-user-id', session.userId);
+  response.headers.set('x-user-role', session.user.role);
+  return response;
+}
+
+export const config = {
+  matcher: '/api/((?!auth/login|auth/register).*)'
+};
+\end{lstlisting}
+
+\section{Implementation Notes}
+
+\subsection{Prisma Setup}
+\textbf{File:} \texttt{lib/prisma.ts}
+
+\begin{lstlisting}
+import { PrismaClient } from '@prisma/client';
+
+const globalForPrisma = global as unknown as { prisma: PrismaClient };
+
+export const prisma = globalForPrisma.prisma || new PrismaClient();
+
+if (process.env.NODE_ENV !== 'production') {
+  globalForPrisma.prisma = prisma;
+}
+\end{lstlisting}
+
+\textbf{Environment Variables (.env):}
+\begin{lstlisting}
+DATABASE_URL="postgresql://user:password@localhost:5432/struggleforum?schema=public"
+NEXT_PUBLIC_API_URL="http://localhost:3000"
+\end{lstlisting}
+
+\textbf{Required npm packages:}
+\begin{lstlisting}
+npm install @prisma/client
+npm install -D prisma
+npm install bcryptjs
+npm install -D @types/bcryptjs
+\end{lstlisting}
+
+\textbf{Prisma Commands:}
+\begin{lstlisting}
+# Initialize Prisma
+npx prisma init
+
+# Create migration
+npx prisma migrate dev --name init
+
+# Generate Prisma Client
+npx prisma generate
+
+# Open Prisma Studio
+npx prisma studio
+\end{lstlisting}
+
+\subsection{Required Validations}
+\begin{itemize}
+    \item Email format validation on registration
+    \item Password strength requirements (minimum 8 characters)
+    \item Input sanitization to prevent XSS attacks
+    \item Rate limiting on authentication endpoints
+\end{itemize}
+
+\newpage
+\subsection{Error Responses}
+All error responses should follow this format:
+\begin{lstlisting}
+{
+  "error": {
+    "code": "ERROR_CODE",
+    "message": "Human-readable error message",
+    "details": {}
+  }
+}
+\end{lstlisting}
+
+Common HTTP status codes:
+\begin{itemize}
+    \item 400: Bad Request (validation errors)
+    \item 401: Unauthorized (authentication required/failed)
+    \item 403: Forbidden (insufficient permissions)
+    \item 404: Not Found
+    \item 500: Internal Server Error
+\end{itemize}
+
+\end{document}
