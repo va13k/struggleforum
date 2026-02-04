@@ -5,7 +5,7 @@ import {
   UserIdParamSchema,
 } from "@/src/server/validation/users";
 import { parseJson, parseParams } from "@/src/server/http/validation";
-import { listUser, updateUser, deleteUser } from "@/src/features/users/service";
+import { getUser, updateUser, deleteUser } from "@/src/features/users/service";
 
 export async function GET(
   req: NextRequest,
@@ -17,7 +17,7 @@ export async function GET(
   }
 
   try {
-    const user = await listUser(prisma, params.id);
+    const user = await getUser(prisma, params);
     return NextResponse.json(user);
   } catch (error) {
     const message =
@@ -42,7 +42,7 @@ export async function PUT(
   }
 
   try {
-    const user = updateUser(prisma, p.data.id, body.data);
+    const user = await updateUser(prisma, p.data.id, body.data);
     return NextResponse.json(user);
   } catch (error) {
     return NextResponse.json(
