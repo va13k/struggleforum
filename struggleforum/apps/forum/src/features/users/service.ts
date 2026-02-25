@@ -14,14 +14,14 @@ import {
   getUserWithPosts,
   getUserWithComments,
   getUserSessions,
-  type UserSelect,
+  type UserPublic,
   type UserWithPosts,
   type UserWithComments,
   type UserWithSessions,
 } from "./repository";
 
 /** Get users with public fields */
-export async function listUsers(prisma: PrismaClient): Promise<UserSelect[]> {
+export async function listUsers(prisma: PrismaClient): Promise<UserPublic[]> {
   return await listUsersRepo(prisma);
 }
 
@@ -30,13 +30,13 @@ export async function listUsers(prisma: PrismaClient): Promise<UserSelect[]> {
 export function getUser(
   prisma: PrismaClient,
   opts: { id: string },
-): Promise<UserSelect>;
+): Promise<UserPublic>;
 
 /** Username */
 export function getUser(
   prisma: PrismaClient,
   opts: { username: string },
-): Promise<UserSelect>;
+): Promise<UserPublic>;
 
 /** User with Posts */
 export function getUser(
@@ -63,7 +63,7 @@ export function getUser(
 export function getUser(
   prisma: PrismaClient,
   opts: { username: string },
-): Promise<UserSelect>;
+): Promise<UserPublic>;
 
 /** Get user Implementation */
 export async function getUser(

@@ -1,42 +1,54 @@
+import type { Prisma } from "@prisma/client";
 import type { PrismaClient } from "@prisma/client/extension";
 
-/** Base selection for user public fields */
-export type UserSelect = {
-  id: true;
-  username: true;
-  email: true;
-  role: true;
-  createdAt: true;
-  updatedAt: true;
-};
-
-/** User with posts field */
-export type UserWithPosts = UserSelect & {
-  posts: true;
-};
-
-/** User with comments field */
-export type UserWithComments = UserSelect & {
-  comments: true;
-};
-
-/** User with sessions field */
-export type UserWithSessions = UserSelect & {
-  sessions: true;
-};
-
 /** Shared Prisma select for user queries */
-const userSelect: UserSelect = {
+const userSelect = {
   id: true,
   username: true,
   email: true,
   role: true,
   createdAt: true,
   updatedAt: true,
-};
+} satisfies Prisma.UserSelect;
+
+/** Base selection for user public fields */
+export type UserSelect = Prisma.UserSelect;
+
+/** User public fields result shape */
+export type UserPublic = Prisma.UserGetPayload<{ select: typeof userSelect }>;
+
+/** User with posts field */
+const userSelectWithPosts = {
+  ...userSelect,
+  posts: true,
+} satisfies Prisma.UserSelect;
+
+export type UserWithPosts = Prisma.UserGetPayload<{
+  select: typeof userSelectWithPosts;
+}>;
+
+/** User with comments field */
+const userSelectWithComments = {
+  ...userSelect,
+  comments: true,
+} satisfies Prisma.UserSelect;
+
+export type UserWithComments = Prisma.UserGetPayload<{
+  select: typeof userSelectWithComments;
+}>;
+
+/** User with sessions field */
+const userSelectWithSessions = {
+  ...userSelect,
+  sessions: true,
+} satisfies Prisma.UserSelect;
+
+export type UserWithSessions = Prisma.UserGetPayload<{
+  select: typeof userSelectWithSessions;
+}>;
 
 /** Lists all users with public fields only. */
-export async function listUsers(prisma: PrismaClient): Promise<UserSelect[]> {
+export async function listUsers(prisma: PrismaClient): Promise<UserPublic[]> {
   return prisma.user.findMany({ select: userSelect });
 }
 
@@ -44,7 +56,7 @@ export async function listUsers(prisma: PrismaClient): Promise<UserSelect[]> {
 export async function getUserById(
   prisma: PrismaClient,
   id: string,
-): Promise<UserSelect | null> {
+): Promise<UserPublic | null> {
   return prisma.user.findUnique({
     where: { id },
     select: userSelect,
@@ -55,7 +67,7 @@ export async function getUserById(
 export async function getUserByUsername(
   prisma: PrismaClient,
   username: string,
-): Promise<UserSelect | null> {
+): Promise<UserPublic | null> {
   return prisma.user.findUnique({
     where: { username },
     select: userSelect,
@@ -69,7 +81,7 @@ export async function getUserWithPosts(
 ): Promise<UserWithPosts | null> {
   return prisma.user.findUnique({
     where: { id },
-    select: { ...userSelect, posts: true },
+    select: userSelectWithPosts,
   });
 }
 
@@ -80,7 +92,7 @@ export async function getUserWithComments(
 ): Promise<UserWithComments | null> {
   return prisma.user.findUnique({
     where: { id },
-    select: { ...userSelect, comments: true },
+    select: userSelectWithComments,
   });
 }
 
@@ -91,7 +103,7 @@ export async function getUserSessions(
 ): Promise<UserWithSessions | null> {
   return prisma.user.findUnique({
     where: { id },
-    select: { ...userSelect, sessions: true },
+    select: userSelectWithSessions,
   });
 }
 
@@ -104,7 +116,7 @@ export async function createUser(
     passwordHash: string;
     role: "USER" | "ADMIN";
   },
-): Promise<UserSelect> {
+): Promise<UserPublic> {
   return prisma.user.create({
     data,
     select: userSelect,
@@ -121,7 +133,7 @@ export async function updateUser(
     passwordHash: string;
     role: "USER" | "ADMIN";
   }>,
-): Promise<UserSelect> {
+): Promise<UserPublic> {
   return prisma.user.update({
     where: { id },
     data,
@@ -133,6 +145,6 @@ export async function updateUser(
 export async function deleteUser(
   prisma: PrismaClient,
   id: string,
-): Promise<UserSelect> {
+): Promise<UserPublic> {
   return prisma.user.delete({ where: { id }, select: userSelect });
 }
