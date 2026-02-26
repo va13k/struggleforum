@@ -19,6 +19,7 @@ import {
   type UserWithComments,
   type UserWithSessions,
 } from "./repository";
+import { Role } from "@prisma/client";
 
 /** Get users with public fields */
 export async function listUsers(prisma: PrismaClient): Promise<UserPublic[]> {
@@ -103,7 +104,7 @@ export async function createUser(prisma: PrismaClient, input: unknown) {
     username: data.username,
     email: data.email,
     passwordHash,
-    role: data.role ?? "USER",
+    role: data.role ?? Role.USER,
   });
 }
 
@@ -118,7 +119,7 @@ export async function updateUser(
     username?: string;
     email?: string;
     passwordHash?: string;
-    role?: "USER" | "ADMIN";
+    role?: Role;
   } = {
     username: data.username,
     email: data.email,

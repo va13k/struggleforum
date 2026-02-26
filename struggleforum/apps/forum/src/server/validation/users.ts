@@ -1,13 +1,16 @@
 import { z } from "zod";
+import { Role } from "@prisma/client";
 
 export const UserIdParamSchema = z.object({
   id: z.uuid("Invalid user id"),
 });
 
-export const UserRoleSchema = z.enum(["USER", "ADMIN"]).default("USER");
+export const UserRoleSchema = z
+  .enum([Role.USER, Role.ADMIN])
+  .default(Role.USER);
 
 export const CreateUserBodySchema = z.object({
-  username: z.string().min(3, "Username is required (min 3)").max(40),
+  username: z.string().min(3, "Username is required (min 3 symbols)").max(40),
   email: z.email("Invalid email"),
   password: z.string().min(8, "Password must be at least 8 characters"),
   role: UserRoleSchema.optional(),

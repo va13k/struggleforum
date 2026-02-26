@@ -1,8 +1,9 @@
 import type { Prisma } from "@prisma/client";
 import type { PrismaClient } from "@prisma/client/extension";
+import type { Role } from "@prisma/client";
 
 /** Shared Prisma select for user queries */
-const userSelect = {
+export const userSelect = {
   id: true,
   username: true,
   email: true,
@@ -114,7 +115,7 @@ export async function createUser(
     username: string;
     email: string;
     passwordHash: string;
-    role: "USER" | "ADMIN";
+    role: Role;
   },
 ): Promise<UserPublic> {
   return prisma.user.create({
@@ -131,7 +132,7 @@ export async function updateUser(
     username: string;
     email: string;
     passwordHash: string;
-    role: "USER" | "ADMIN";
+    role: Role;
   }>,
 ): Promise<UserPublic> {
   return prisma.user.update({
