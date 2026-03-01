@@ -1,112 +1,48 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
-  createUser,
-  deleteUser,
-  getUser,
-  listUsers,
-  updateUser,
+  getUserById,
+  getUserByUsername,
+  getUserSessions,
+  getUserWithComments,
+  getUserWithPosts,
+  updateOwnProfile,
+  updateUserRole,
 } from "./service";
 import * as userRepository from "./repository";
-import bcrypt from "bcryptjs";
 import { Role } from "@prisma/client";
-
-vi.mock("bcryptjs", () => ({
-  default: {
-    hash: vi.fn().mockResolvedValue("hashed-password"),
-  },
-}));
+import { makePublicUser, makeUser } from "@/src/test/factories";
 
 vi.mock("./repository", () => ({
-  listUsers: vi.fn(),
   getUserById: vi.fn(),
   getUserByUsername: vi.fn(),
   getUserWithPosts: vi.fn(),
   getUserWithComments: vi.fn(),
   getUserSessions: vi.fn(),
-  createUser: vi.fn(),
   updateUser: vi.fn(),
-  deleteUser: vi.fn(),
 }));
 
 describe("users service", () => {
-  const baseUser = {
-    id: "2ad7fbc0-72ad-4b7c-96e8-2388b1a2860a",
-    username: "alice",
-    email: "alice@test.com",
-    role: Role.USER,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  };
+  const baseUser = makePublicUser();
 
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it("creates a user with hashed password", async () => {
-    const prisma = {} as any;
-    vi.mocked(userRepository.createUser).mockResolvedValue(baseUser);
-
-    const user = await createUser(prisma, {
-      username: "alice",
-      email: "alice@test.com",
-      password: "password123",
-    });
-
-    expect(bcrypt.hash).toHaveBeenCalledWith("password123", 10);
-    expect(userRepository.createUser).toHaveBeenCalledWith(
-      prisma,
-      expect.objectContaining({
-        username: "alice",
-        email: "alice@test.com",
-        passwordHash: "hashed-password",
-        role: Role.USER,
-      }),
-    );
-    expect(user).toEqual(baseUser);
-  });
-
-  it("rejects invalid email", async () => {
-    const prisma = {} as any;
-
-    await expect(
-      createUser(prisma, {
-        username: "alice",
-        email: "notemail1337",
-        password: "password123",
-      }),
-    ).rejects.toBeTruthy();
-    expect(userRepository.createUser).not.toHaveBeenCalled();
-  });
-
-  it("lists users via repository", async () => {
-    const prisma = {} as any;
-    const users = [baseUser];
-    vi.mocked(userRepository.listUsers).mockResolvedValue(users);
-
-    const result = await listUsers(prisma);
-
-    expect(userRepository.listUsers).toHaveBeenCalledWith(prisma);
-    expect(result).toEqual(users);
-  });
-
   it("gets user by id", async () => {
     const prisma = {} as any;
-    vi.mocked(userRepository.getUserById).mockResolvedValue(baseUser);
+    vi.mocked(userRepository.getUserById).mockResolvedValue(baseUser as any);
 
-    const result = await getUser(prisma, { id: baseUser.id });
+    const result = await getUserById(prisma, baseUser.id);
 
-    expect(userRepository.getUserById).toHaveBeenCalledWith(
-      prisma,
-      baseUser.id,
-    );
+    expect(userRepository.getUserById).toHaveBeenCalledWith(prisma, baseUser.id);
     expect(result).toEqual(baseUser);
   });
 
   it("gets user by username", async () => {
     const prisma = {} as any;
-    vi.mocked(userRepository.getUserByUsername).mockResolvedValue(baseUser);
+    vi.mocked(userRepository.getUserByUsername).mockResolvedValue(baseUser as any);
 
-    const result = await getUser(prisma, { username: baseUser.username });
+    const result = await getUserByUsername(prisma, baseUser.username);
 
     expect(userRepository.getUserByUsername).toHaveBeenCalledWith(
       prisma,
@@ -115,79 +51,81 @@ describe("users service", () => {
     expect(result).toEqual(baseUser);
   });
 
-  it("gets user with posts when relation is posts", async () => {
+  it("gets user with posts", async () => {
     const prisma = {} as any;
-    const userWithPosts = { ...baseUser, posts: [] as any[] };
-    vi.mocked(userRepository.getUserWithPosts).mockResolvedValue(userWithPosts);
+    const userWithPosts = { ...baseUser, posts: [] };
+    vi.mocked(userRepository.getUserWithPosts).mockResolvedValue(userWithPosts as any);
 
-    const result = await getUser(prisma, { id: baseUser.id }, "posts");
+    const result = await getUserWithPosts(prisma, baseUser.id);
 
-    expect(userRepository.getUserWithPosts).toHaveBeenCalledWith(
+    expect(userRepository.getUserWithPosts).toHaveBeenCalledWith(prisma, baseUser.id);
+    expect(result).toEqual(userWithPosts);
+  });
+
+  it("gets user with comments", async () => {
+    const prisma = {} as any;
+    const userWithComments = { ...baseUser, comments: [] };
+    vi.mocked(userRepository.getUserWithComments).mockResolvedValue(
+      userWithComments as any,
+    );
+
+    const result = await getUserWithComments(prisma, baseUser.id);
+
+    expect(userRepository.getUserWithComments).toHaveBeenCalledWith(
       prisma,
       baseUser.id,
     );
-    expect(result).toEqual(userWithPosts);
+    expect(result).toEqual(userWithComments);
+  });
+
+  it("gets user sessions", async () => {
+    const prisma = {} as any;
+    const userWithSessions = { ...makeUser(), sessions: [] };
+    vi.mocked(userRepository.getUserSessions).mockResolvedValue(userWithSessions as any);
+
+    const result = await getUserSessions(prisma, baseUser.id);
+
+    expect(userRepository.getUserSessions).toHaveBeenCalledWith(prisma, baseUser.id);
+    expect(result).toEqual(userWithSessions);
   });
 
   it("throws when user is not found", async () => {
     const prisma = {} as any;
     vi.mocked(userRepository.getUserById).mockResolvedValue(null);
 
-    await expect(getUser(prisma, { id: baseUser.id })).rejects.toThrow(
-      "User not found",
-    );
+    await expect(getUserById(prisma, baseUser.id)).rejects.toThrow("User not found");
   });
 
-  it("updates user without password does not hash", async () => {
+  it("updates own profile and normalizes fields", async () => {
     const prisma = {} as any;
-    vi.mocked(userRepository.updateUser).mockResolvedValue(baseUser);
+    const updatedUser = makeUser({
+      avatarUrl: "https://example.com/avatar.png",
+    });
+    vi.mocked(userRepository.updateUser).mockResolvedValue(updatedUser as any);
 
-    const result = await updateUser(prisma, baseUser.id, {
-      email: "bob@test.com",
+    const result = await updateOwnProfile(prisma, baseUser.id, {
+      email: "Alice@Test.com",
+      avatarUrl: "https://example.com/avatar.png",
     });
 
-    expect(bcrypt.hash).not.toHaveBeenCalled();
-    expect(userRepository.updateUser).toHaveBeenCalledWith(
-      prisma,
-      baseUser.id,
-      {
-        username: undefined,
-        email: "bob@test.com",
-        role: Role.USER,
-      },
-    );
-    expect(result).toEqual(baseUser);
-  });
-
-  it("updates user with password hashes and passes passwordHash", async () => {
-    const prisma = {} as any;
-    vi.mocked(userRepository.updateUser).mockResolvedValue(baseUser);
-
-    const result = await updateUser(prisma, baseUser.id, {
-      password: "password123",
+    expect(userRepository.updateUser).toHaveBeenCalledWith(prisma, baseUser.id, {
+      username: undefined,
+      email: "alice@test.com",
+      avatarUrl: "https://example.com/avatar.png",
     });
-
-    expect(bcrypt.hash).toHaveBeenCalledWith("password123", 10);
-    expect(userRepository.updateUser).toHaveBeenCalledWith(
-      prisma,
-      baseUser.id,
-      {
-        username: undefined,
-        email: undefined,
-        role: Role.USER,
-        passwordHash: "hashed-password",
-      },
-    );
-    expect(result).toEqual(baseUser);
+    expect(result).toEqual(updatedUser);
   });
 
-  it("deletes user via repository", async () => {
+  it("updates user role", async () => {
     const prisma = {} as any;
-    vi.mocked(userRepository.deleteUser).mockResolvedValue(baseUser);
+    const adminUser = makeUser({ role: Role.ADMIN });
+    vi.mocked(userRepository.updateUser).mockResolvedValue(adminUser as any);
 
-    const result = await deleteUser(prisma, baseUser.id);
+    const result = await updateUserRole(prisma, baseUser.id, { role: Role.ADMIN });
 
-    expect(userRepository.deleteUser).toHaveBeenCalledWith(prisma, baseUser.id);
-    expect(result).toEqual(baseUser);
+    expect(userRepository.updateUser).toHaveBeenCalledWith(prisma, baseUser.id, {
+      role: Role.ADMIN,
+    });
+    expect(result).toEqual(adminUser);
   });
 });

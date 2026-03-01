@@ -1,76 +1,64 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/src/server/db/prisma";
+import { requireSelfOrAdmin, requireSession } from "@/src/server/auth/session";
+import { toErrorResponse } from "@/src/server/http/errors";
+import { parseParams, resolveRouteParams } from "@/src/server/http/validation";
 import {
-  UpdateUserBodySchema,
+  getUserById,
+  getUserSessions,
+  getUserWithComments,
+  getUserWithPosts,
+} from "@/src/features/users/service";
+import {
   UserIdParamSchema,
+  UserIncludeQuerySchema,
 } from "@/src/server/validation/users";
-import { parseJson, parseParams } from "@/src/server/http/validation";
-import { getUser, updateUser, deleteUser } from "@/src/features/users/service";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> | { id: string } },
 ) {
-  const p = parseParams(params, UserIdParamSchema);
-  if (!p.ok) {
-    return p.res;
+  const routeParams = await resolveRouteParams(params);
+  const parsedParams = parseParams(routeParams, UserIdParamSchema);
+
+  if (!parsedParams.ok) {
+    return parsedParams.res;
+  }
+
+  const include = req.nextUrl.searchParams.get("include");
+  const relation = include
+    ? UserIncludeQuerySchema.safeParse(include)
+    : { success: true as const, data: undefined };
+
+  if (!relation.success) {
+    return NextResponse.json(
+      { error: "Invalid include query parameter", issues: relation.error },
+      { status: 400 },
+    );
   }
 
   try {
-    const user = await getUser(prisma, params);
+    if (!relation.data) {
+      const user = await getUserById(prisma, parsedParams.data.id);
+      return NextResponse.json(user);
+    }
+
+    const session = await requireSession(prisma, req);
+
+    if (relation.data === "sessions") {
+      requireSelfOrAdmin(session, parsedParams.data.id);
+      const user = await getUserSessions(prisma, parsedParams.data.id);
+      return NextResponse.json(user);
+    }
+
+    if (relation.data === "posts") {
+      const user = await getUserWithPosts(prisma, parsedParams.data.id);
+      return NextResponse.json(user);
+    }
+
+    const user = await getUserWithComments(prisma, parsedParams.data.id);
     return NextResponse.json(user);
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Failed to fetch user.";
-    const status = message === "User not found" ? 404 : 500;
-    return NextResponse.json({ error: message }, { status });
-  }
-}
-
-export async function PUT(
-  req: NextRequest,
-  { params }: { params: { id: string } },
-) {
-  const p = parseParams(params, UserIdParamSchema);
-  if (!p.ok) {
-    return p.res;
-  }
-
-  const body = await parseJson(req, UpdateUserBodySchema);
-  if (!body.ok) {
-    return body.res;
-  }
-
-  try {
-    const user = await updateUser(prisma, p.data.id, body.data);
-    return NextResponse.json(user);
-  } catch (error) {
-    return NextResponse.json(
-      { error: "Failed to update user." },
-      { status: 500 },
-    );
-  }
-}
-
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: { id: string } },
-) {
-  const p = parseParams(params, UserIdParamSchema);
-  if (!p.ok) {
-    return p.res;
-  }
-
-  try {
-    await deleteUser(prisma, p.data.id);
-    return NextResponse.json(
-      { message: `User with id: ${params.id} deleted` },
-      { status: 200 },
-    );
-  } catch (error) {
-    return NextResponse.json(
-      { error: "Failed to delete user." },
-      { status: 500 },
-    );
+    return toErrorResponse(error, "Failed to fetch user.");
   }
 }

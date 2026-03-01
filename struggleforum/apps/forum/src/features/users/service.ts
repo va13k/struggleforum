@@ -1,139 +1,108 @@
 import type { PrismaClient } from "@prisma/client/extension";
-import bcrypt from "bcryptjs";
+import { NotFoundError } from "@/src/server/http/errors";
+import { normalizeAvatarUrl, normalizeEmail } from "@/src/lib/utils";
 import {
-  CreateUserBodySchema,
-  UpdateUserBodySchema,
-} from "@/src/server/validation/users";
-import {
-  createUser as createUserRepo,
-  deleteUser as deleteUserRepo,
-  listUsers as listUsersRepo,
+  getUserById as getUserByIdRepo,
+  getUserByUsername as getUserByUsernameRepo,
+  getUserSessions as getUserSessionsRepo,
+  getUserWithComments as getUserWithCommentsRepo,
+  getUserWithPosts as getUserWithPostsRepo,
   updateUser as updateUserRepo,
-  getUserById,
-  getUserByUsername,
-  getUserWithPosts,
-  getUserWithComments,
-  getUserSessions,
+  type UserPrivate,
   type UserPublic,
-  type UserWithPosts,
   type UserWithComments,
+  type UserWithPosts,
   type UserWithSessions,
 } from "./repository";
-import { Role } from "@prisma/client";
+import {
+  AdminUpdateUserRoleBodySchema,
+  UserProfileUpdateBodySchema,
+} from "../../server/validation/users";
 
-/** Get users with public fields */
-export async function listUsers(prisma: PrismaClient): Promise<UserPublic[]> {
-  return await listUsersRepo(prisma);
-}
-
-/** Get user declaration */
-/** ID */
-export function getUser(
+export async function getUserById(
   prisma: PrismaClient,
-  opts: { id: string },
-): Promise<UserPublic>;
-
-/** Username */
-export function getUser(
-  prisma: PrismaClient,
-  opts: { username: string },
-): Promise<UserPublic>;
-
-/** User with Posts */
-export function getUser(
-  prisma: PrismaClient,
-  opts: { id: string },
-  relation: "posts",
-): Promise<UserWithPosts>;
-
-/** User with Comments */
-export function getUser(
-  prisma: PrismaClient,
-  opts: { id: string },
-  relation: "comments",
-): Promise<UserWithComments>;
-
-/** User with Sessions */
-export function getUser(
-  prisma: PrismaClient,
-  opts: { id: string },
-  relation: "sessions",
-): Promise<UserWithSessions>;
-
-/** Get user using Username */
-export function getUser(
-  prisma: PrismaClient,
-  opts: { username: string },
-): Promise<UserPublic>;
-
-/** Get user Implementation */
-export async function getUser(
-  prisma: PrismaClient,
-  opts: { id: string } | { username: string },
-  relation?: "posts" | "comments" | "sessions",
-) {
-  let user;
-
-  if ("username" in opts) {
-    user = await getUserByUsername(prisma, opts.username);
-  } else {
-    if (relation === "posts") {
-      user = await getUserWithPosts(prisma, opts.id);
-    } else if (relation === "comments") {
-      user = await getUserWithComments(prisma, opts.id);
-    } else if (relation === "sessions") {
-      user = await getUserSessions(prisma, opts.id);
-    } else {
-      user = await getUserById(prisma, opts.id);
-    }
-  }
+  id: string,
+): Promise<UserPublic> {
+  const user = await getUserByIdRepo(prisma, id);
 
   if (!user) {
-    throw new Error("User not found");
+    throw new NotFoundError("User not found");
   }
 
   return user;
 }
 
-/** Create user with public fields only. */
-export async function createUser(prisma: PrismaClient, input: unknown) {
-  const data = CreateUserBodySchema.parse(input);
-  const passwordHash = await bcrypt.hash(data.password, 10);
+export async function getUserByUsername(
+  prisma: PrismaClient,
+  username: string,
+): Promise<UserPublic> {
+  const user = await getUserByUsernameRepo(prisma, username);
 
-  return createUserRepo(prisma, {
-    username: data.username,
-    email: data.email,
-    passwordHash,
-    role: data.role ?? Role.USER,
-  });
+  if (!user) {
+    throw new NotFoundError("User not found");
+  }
+
+  return user;
 }
 
-/** Update user's public fields. */
-export async function updateUser(
+export async function getUserWithPosts(
+  prisma: PrismaClient,
+  id: string,
+): Promise<UserWithPosts> {
+  const user = await getUserWithPostsRepo(prisma, id);
+
+  if (!user) {
+    throw new NotFoundError("User not found");
+  }
+
+  return user;
+}
+
+export async function getUserWithComments(
+  prisma: PrismaClient,
+  id: string,
+): Promise<UserWithComments> {
+  const user = await getUserWithCommentsRepo(prisma, id);
+
+  if (!user) {
+    throw new NotFoundError("User not found");
+  }
+
+  return user;
+}
+
+export async function getUserSessions(
+  prisma: PrismaClient,
+  id: string,
+): Promise<UserWithSessions> {
+  const user = await getUserSessionsRepo(prisma, id);
+
+  if (!user) {
+    throw new NotFoundError("User not found");
+  }
+
+  return user;
+}
+
+export async function updateOwnProfile(
   prisma: PrismaClient,
   id: string,
   input: unknown,
-) {
-  const data = UpdateUserBodySchema.parse(input);
-  const updateData: {
-    username?: string;
-    email?: string;
-    passwordHash?: string;
-    role?: Role;
-  } = {
-    username: data.username,
-    email: data.email,
-    role: data.role,
-  };
+): Promise<UserPrivate> {
+  const data = UserProfileUpdateBodySchema.parse(input);
 
-  if (data.password) {
-    updateData.passwordHash = await bcrypt.hash(data.password, 10);
-  }
-
-  return updateUserRepo(prisma, id, updateData);
+  return updateUserRepo(prisma, id, {
+    username: data.username?.trim(),
+    email: data.email ? normalizeEmail(data.email) : undefined,
+    avatarUrl: normalizeAvatarUrl(data.avatarUrl),
+  });
 }
 
-/** Delete user */
-export async function deleteUser(prisma: PrismaClient, id: string) {
-  return deleteUserRepo(prisma, id);
+export async function updateUserRole(
+  prisma: PrismaClient,
+  id: string,
+  input: unknown,
+): Promise<UserPrivate> {
+  const data = AdminUpdateUserRoleBodySchema.parse(input);
+  return updateUserRepo(prisma, id, { role: data.role });
 }
