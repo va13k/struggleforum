@@ -4,8 +4,13 @@ export const PostIdParamSchema = z.object({
   id: z.uuid("Invalid post id"),
 });
 
+export const ListPostsQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(50).default(20),
+  category: z.uuid("Invalid category id").optional(),
+});
+
 export const CreatePostBodySchema = z.object({
-  authorId: z.uuid("Invalid author id"),
   categoryId: z.uuid("Invalid category id"),
   title: z
     .string()
@@ -15,15 +20,14 @@ export const CreatePostBodySchema = z.object({
   content: z
     .string()
     .min(10)
-    .refine((v) => v.trim().length >= 10, {
+    .refine((value) => value.trim().length >= 10, {
       message: "The post content is required (min 10 symbols)",
     }),
-  locked: z.boolean().optional().default(false),
 });
 
 export const UpdatePostBodySchema = z
   .object({
-    categoryId: z.uuid("Invalid category id"),
+    categoryId: z.uuid("Invalid category id").optional(),
     title: z
       .string()
       .trim()
@@ -33,10 +37,9 @@ export const UpdatePostBodySchema = z
     content: z
       .string()
       .optional()
-      .refine((v) => v === undefined || v.trim().length >= 10, {
+      .refine((value) => value === undefined || value.trim().length >= 10, {
         message: "The post content is required (min 10 symbols)",
       }),
-    locked: z.boolean().optional(),
   })
   .strict()
   .refine((obj) => Object.keys(obj).length > 0, {

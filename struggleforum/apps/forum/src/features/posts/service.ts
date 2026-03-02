@@ -1,79 +1,161 @@
-import type { PrismaClient } from "@prisma/client/extension";
+import type { PrismaClient, Role } from "@prisma/client";
+import { getCategoryById } from "@/src/features/categories/repository";
+import { createModerationNotification } from "@/src/features/notifications/service";
+import { ForbiddenError, NotFoundError } from "@/src/server/http/errors";
 import {
-  listPosts as listPostsRepo,
-  getPostById as getPostByIdRepo,
-  getPostByIdWithRelations as getPostByIdWithRelationsRepo,
-  searchPosts as searchPostsRepo,
   createPost as createPostRepo,
-  updatePost as updatePostRepo,
   deletePost as deletePostRepo,
-  type PostPublic,
-  type PostWithRelations,
+  getPostById as getPostByIdRepo,
+  getPostOwnerRecord,
+  listPosts as listPostsRepo,
+  setPostLocked as setPostLockedRepo,
+  updatePost as updatePostRepo,
 } from "./repository";
 import {
   CreatePostBodySchema,
+  ListPostsQuerySchema,
   UpdatePostBodySchema,
-} from "@/src/server/validation/posts";
+} from "../../server/validation/posts";
 
-export async function listPosts(prisma: PrismaClient): Promise<PostPublic[]> {
-  return await listPostsRepo(prisma);
+export async function listPosts(prisma: PrismaClient, input: unknown) {
+  const query = ListPostsQuerySchema.parse(input);
+  const { posts, total } = await listPostsRepo(prisma, {
+    page: query.page,
+    limit: query.limit,
+    categoryId: query.category,
+  });
+
+  return {
+    posts,
+    pagination: {
+      page: query.page,
+      limit: query.limit,
+      total,
+    },
+  };
 }
 
-export async function getPostById(
-  prisma: PrismaClient,
-  id: string,
-): Promise<PostPublic | null> {
-  return await getPostByIdRepo(prisma, id);
-}
+export async function getPostById(prisma: PrismaClient, id: string) {
+  const post = await getPostByIdRepo(prisma, id);
 
-export async function getPostByIdWithRelations(
-  prisma: PrismaClient,
-  id: string,
-): Promise<PostWithRelations | null> {
-  return await getPostByIdWithRelationsRepo(prisma, id);
-}
-
-type SearchPostsInput = {
-  query: string;
-  page?: number;
-  limit?: number;
-};
-
-export async function searchPosts(
-  prisma: PrismaClient,
-  input: SearchPostsInput,
-): Promise<PostPublic[]> {
-  if (input.query.length < 3) {
-    return [];
+  if (!post) {
+    throw new NotFoundError("Post not found");
   }
 
-  const page = Math.max(1, Math.floor(input.page ?? 1));
-  const take = Math.min(Math.max(Math.floor(input.limit ?? 10), 1), 50);
-  const skip = (page - 1) * take;
-
-  return await searchPostsRepo(prisma, input.query.trim(), skip, take);
+  return post;
 }
 
 export async function createPost(
   prisma: PrismaClient,
+  authorId: string,
   input: unknown,
-): Promise<PostPublic> {
+) {
   const data = CreatePostBodySchema.parse(input);
-  return await createPostRepo(prisma, data);
+  const category = await getCategoryById(prisma, data.categoryId);
+
+  if (!category) {
+    throw new NotFoundError("Category not found");
+  }
+
+  return createPostRepo(prisma, {
+    authorId,
+    categoryId: data.categoryId,
+    title: data.title.trim(),
+    content: data.content.trim(),
+  });
 }
 
 export async function updatePost(
   prisma: PrismaClient,
+  actor: { id: string; role: Role },
   id: string,
   input: unknown,
-): Promise<PostPublic> {
+) {
   const data = UpdatePostBodySchema.parse(input);
-  return await updatePostRepo(prisma, id, data);
+  const post = await getPostOwnerRecord(prisma, id);
+
+  if (!post) {
+    throw new NotFoundError("Post not found");
+  }
+
+  if (post.authorId !== actor.id && actor.role !== "ADMIN") {
+    throw new ForbiddenError();
+  }
+
+  if (data.categoryId) {
+    const category = await getCategoryById(prisma, data.categoryId);
+
+    if (!category) {
+      throw new NotFoundError("Category not found");
+    }
+  }
+
+  return updatePostRepo(prisma, id, {
+    categoryId: data.categoryId,
+    title: data.title?.trim(),
+    content: data.content?.trim(),
+  });
 }
 
 export async function deletePost(
   prisma: PrismaClient,
+  actor: { id: string; role: Role },
   id: string,
-): Promise<PostPublic> {
-  return await deletePostRepo(prisma, id);
+) {
+  const post = await getPostOwnerRecord(prisma, id);
+
+  if (!post) {
+    throw new NotFoundError("Post not found");
+  }
+
+  if (post.authorId !== actor.id) {
+    throw new ForbiddenError();
+  }
+
+  await deletePostRepo(prisma, id);
+}
+
+export async function deletePostAsAdmin(
+  prisma: PrismaClient,
+  actor: { id: string; role: Role },
+  id: string,
+  reason: string,
+) {
+  if (actor.role !== "ADMIN") {
+    throw new ForbiddenError();
+  }
+
+  const post = await getPostOwnerRecord(prisma, id);
+
+  if (!post) {
+    throw new NotFoundError("Post not found");
+  }
+
+  await createModerationNotification(prisma, {
+    userId: post.authorId,
+    actorId: actor.id,
+    targetLabel: "post",
+    reason,
+  });
+
+  await deletePostRepo(prisma, id);
+}
+
+export async function setPostLocked(
+  prisma: PrismaClient,
+  actor: { id: string; role: Role },
+  id: string,
+  locked: boolean,
+) {
+  const post = await getPostOwnerRecord(prisma, id);
+
+  if (!post) {
+    throw new NotFoundError("Post not found");
+  }
+
+  if (post.authorId !== actor.id && actor.role !== "ADMIN") {
+    throw new ForbiddenError();
+  }
+
+  return setPostLockedRepo(prisma, id, locked);
 }

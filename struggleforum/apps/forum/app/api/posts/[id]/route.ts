@@ -1,92 +1,88 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/src/server/db/prisma";
+import { requireSession } from "@/src/server/auth/session";
 import {
-  UpdatePostBodySchema,
-  PostIdParamSchema,
-} from "@/src/server/validation/posts";
-import { parseJson, parseParams } from "@/src/server/http/validation";
+  parseJson,
+  parseParams,
+  resolveRouteParams,
+} from "@/src/server/http/validation";
+import { toErrorResponse } from "@/src/server/http/errors";
 import {
-  getPostById,
-  getPostByIdWithRelations,
   deletePost,
+  getPostById,
   updatePost,
 } from "@/src/features/posts/service";
+import {
+  PostIdParamSchema,
+  UpdatePostBodySchema,
+} from "@/src/server/validation/posts";
 
 export async function GET(
-  req: NextRequest,
-  { params }: { params: { id: string } },
+  _req: NextRequest,
+  { params }: { params: Promise<{ id: string }> | { id: string } },
 ) {
-  const p = parseParams(params, PostIdParamSchema);
+  const routeParams = await resolveRouteParams(params);
+  const parsedParams = parseParams(routeParams, PostIdParamSchema);
 
-  if (!p.ok) {
-    return p.res;
+  if (!parsedParams.ok) {
+    return parsedParams.res;
   }
 
   try {
-    const includeRelations =
-      req.nextUrl.searchParams.get("include") === "relations";
-
-    const post = includeRelations
-      ? await getPostByIdWithRelations(prisma, p.data.id)
-      : await getPostById(prisma, p.data.id);
-
-    if (!post) {
-      return NextResponse.json({ error: "Post not found" }, { status: 404 });
-    }
-
+    const post = await getPostById(prisma, parsedParams.data.id);
     return NextResponse.json(post);
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Failed to fetch post.";
-    const status = message === "Post not found" ? 404 : 500;
-    return NextResponse.json({ error: message }, { status });
+    return toErrorResponse(error, "Failed to fetch post.");
   }
 }
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> | { id: string } },
 ) {
-  const p = parseParams(params, PostIdParamSchema);
-  if (!p.ok) {
-    return p.res;
+  const routeParams = await resolveRouteParams(params);
+  const parsedParams = parseParams(routeParams, PostIdParamSchema);
+
+  if (!parsedParams.ok) {
+    return parsedParams.res;
   }
 
   const body = await parseJson(req, UpdatePostBodySchema);
+
   if (!body.ok) {
     return body.res;
   }
 
   try {
-    const post = await updatePost(prisma, p.data.id, body.data);
+    const session = await requireSession(prisma, req);
+    const post = await updatePost(
+      prisma,
+      session.user,
+      parsedParams.data.id,
+      body.data,
+    );
     return NextResponse.json(post);
   } catch (error) {
-    return NextResponse.json(
-      { error: "Failed to update post." },
-      { status: 500 },
-    );
+    return toErrorResponse(error, "Failed to update post.");
   }
 }
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> | { id: string } },
 ) {
-  const p = parseParams(params, PostIdParamSchema);
-  if (!p.ok) {
-    return p.res;
+  const routeParams = await resolveRouteParams(params);
+  const parsedParams = parseParams(routeParams, PostIdParamSchema);
+
+  if (!parsedParams.ok) {
+    return parsedParams.res;
   }
 
   try {
-    await deletePost(prisma, p.data.id);
-    return NextResponse.json(
-      { message: `Post with id: ${params.id} deleted` },
-      { status: 200 },
-    );
+    const session = await requireSession(prisma, req);
+    await deletePost(prisma, session.user, parsedParams.data.id);
+    return NextResponse.json({ message: "Post deleted successfully" });
   } catch (error) {
-    return NextResponse.json(
-      { error: "Failed to delete post." },
-      { status: 500 },
-    );
+    return toErrorResponse(error, "Failed to delete post.");
   }
 }

@@ -1,8 +1,15 @@
 import type { Prisma } from "@prisma/client";
 import type { PrismaClient } from "@prisma/client/extension";
-import { userSelect } from "@/src/features/users/repository";
+import { publicUserSelect } from "@/src/features/users/repository";
 
-const postSelect = {
+const postOwnerSelect = {
+  id: true,
+  authorId: true,
+  categoryId: true,
+  locked: true,
+} satisfies Prisma.PostSelect;
+
+const postPublicSelect = {
   id: true,
   authorId: true,
   categoryId: true,
@@ -11,70 +18,69 @@ const postSelect = {
   locked: true,
   createdAt: true,
   updatedAt: true,
-} satisfies Prisma.PostSelect;
-
-const postWithRelationsSelect = {
-  ...postSelect,
-  author: { select: userSelect },
+  author: { select: publicUserSelect },
   category: true,
   _count: { select: { likes: true, comments: true } },
 } satisfies Prisma.PostSelect;
 
-export type PostSelect = Prisma.PostSelect;
-export type PostPublic = Prisma.PostGetPayload<{ select: typeof postSelect }>;
+const postLockSelect = {
+  id: true,
+  locked: true,
+} satisfies Prisma.PostSelect;
 
-export type PostWithRelations = Prisma.PostGetPayload<{
-  select: typeof postWithRelationsSelect;
+export type PostOwnerRecord = Prisma.PostGetPayload<{
+  select: typeof postOwnerSelect;
+}>;
+export type PostPublic = Prisma.PostGetPayload<{
+  select: typeof postPublicSelect;
+}>;
+export type PostLockRecord = Prisma.PostGetPayload<{
+  select: typeof postLockSelect;
 }>;
 
-/** Lists all posts */
-export async function listPosts(prisma: PrismaClient): Promise<PostPublic[]> {
-  return prisma.post.findMany({ select: postSelect });
+export async function listPosts(
+  prisma: PrismaClient,
+  input: { page: number; limit: number; categoryId?: string },
+): Promise<{ posts: PostPublic[]; total: number }> {
+  const where: Prisma.PostWhereInput = input.categoryId
+    ? { categoryId: input.categoryId }
+    : {};
+  const skip = (input.page - 1) * input.limit;
+
+  const [posts, total] = await prisma.$transaction([
+    prisma.post.findMany({
+      where,
+      select: postPublicSelect,
+      orderBy: { createdAt: "desc" },
+      skip,
+      take: input.limit,
+    }),
+    prisma.post.count({ where }),
+  ]);
+
+  return { posts, total };
 }
 
-/** Get post by id; returns null otherwise */
 export async function getPostById(
   prisma: PrismaClient,
   id: string,
 ): Promise<PostPublic | null> {
   return prisma.post.findUnique({
     where: { id },
-    select: postSelect,
+    select: postPublicSelect,
   });
 }
 
-/** Get post by id with relations and counts; returns null if missing. */
-export async function getPostByIdWithRelations(
+export async function getPostOwnerRecord(
   prisma: PrismaClient,
   id: string,
-): Promise<PostWithRelations | null> {
+): Promise<PostOwnerRecord | null> {
   return prisma.post.findUnique({
     where: { id },
-    select: postWithRelationsSelect,
+    select: postOwnerSelect,
   });
 }
 
-/** Get posts with substring that appears in post title or content; returns empty array if missing. */
-export async function searchPosts(
-  prisma: PrismaClient,
-  query: string,
-  skip = 0,
-  take = 20,
-): Promise<PostPublic[]> {
-  return prisma.post.findMany({
-    where: {
-      OR: [
-        { title: { contains: query, mode: "insensitive" } },
-        { content: { contains: query, mode: "insensitive" } },
-      ],
-    },
-    orderBy: { createdAt: "desc" },
-    skip,
-    take,
-  });
-}
-
-/** Create a post and return its fields only. */
 export async function createPost(
   prisma: PrismaClient,
   data: {
@@ -82,39 +88,48 @@ export async function createPost(
     categoryId: string;
     title: string;
     content: string;
-    locked?: boolean;
   },
 ): Promise<PostPublic> {
-  return prisma.post.create({
+  const post = await prisma.post.create({
     data,
-    select: postSelect,
+    select: { id: true },
+  });
+
+  return prisma.post.findUniqueOrThrow({
+    where: { id: post.id },
+    select: postPublicSelect,
   });
 }
 
-/** Update a post and return its fields only. */
 export async function updatePost(
   prisma: PrismaClient,
   id: string,
   data: Partial<{
+    categoryId: string;
     title: string;
     content: string;
-    locked: boolean;
   }>,
 ): Promise<PostPublic> {
-  return prisma.post.update({
+  await prisma.post.update({ where: { id }, data, select: { id: true } });
+
+  return prisma.post.findUniqueOrThrow({
     where: { id },
-    data,
-    select: postSelect,
+    select: postPublicSelect,
   });
 }
 
-/** Delete a post by id and return its fields only. */
-export async function deletePost(
+export async function deletePost(prisma: PrismaClient, id: string) {
+  await prisma.post.delete({ where: { id } });
+}
+
+export async function setPostLocked(
   prisma: PrismaClient,
   id: string,
-): Promise<PostPublic> {
-  return prisma.post.delete({
+  locked: boolean,
+): Promise<PostLockRecord> {
+  return prisma.post.update({
     where: { id },
-    select: postSelect,
+    data: { locked },
+    select: postLockSelect,
   });
 }
