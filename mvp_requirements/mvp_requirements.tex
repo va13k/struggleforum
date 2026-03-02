@@ -725,7 +725,20 @@ export async function POST(req: NextRequest) {
   "username": "string",
   "avatarUrl": "string|null",
   "role": "USER",
-  "posts": []
+  "createdAt": "timestamp",
+  "updatedAt": "timestamp",
+  "posts": [
+    {
+      "id": "uuid",
+      "authorId": "uuid",
+      "categoryId": "uuid",
+      "title": "string",
+      "content": "string",
+      "locked": false,
+      "createdAt": "timestamp",
+      "updatedAt": "timestamp"
+    }
+  ]
 }
 \end{lstlisting}
 
@@ -745,13 +758,27 @@ export async function POST(req: NextRequest) {
   "posts": [
     {
       "id": "uuid",
+      "authorId": "uuid",
+      "categoryId": "uuid",
       "title": "string",
       "content": "string",
       "locked": false,
       "createdAt": "timestamp",
       "updatedAt": "timestamp",
-      "author": { "id": "uuid", "username": "string" },
-      "category": { "id": "uuid", "name": "string" },
+      "author": {
+        "id": "uuid",
+        "username": "string",
+        "avatarUrl": "string|null",
+        "role": "USER",
+        "createdAt": "timestamp",
+        "updatedAt": "timestamp"
+      },
+      "category": {
+        "id": "uuid",
+        "name": "string",
+        "description": "string|null",
+        "createdAt": "timestamp"
+      },
       "_count": { "likes": 0, "comments": 0 }
     }
   ],
@@ -768,13 +795,27 @@ export async function POST(req: NextRequest) {
 \begin{lstlisting}
 {
   "id": "uuid",
+  "authorId": "uuid",
+  "categoryId": "uuid",
   "title": "string",
   "content": "string",
   "locked": false,
   "createdAt": "timestamp",
   "updatedAt": "timestamp",
-  "author": { "id": "uuid", "username": "string" },
-  "category": { "id": "uuid", "name": "string" },
+  "author": {
+    "id": "uuid",
+    "username": "string",
+    "avatarUrl": "string|null",
+    "role": "USER",
+    "createdAt": "timestamp",
+    "updatedAt": "timestamp"
+  },
+  "category": {
+    "id": "uuid",
+    "name": "string",
+    "description": "string|null",
+    "createdAt": "timestamp"
+  },
   "_count": { "likes": 0, "comments": 0 }
 }
 \end{lstlisting}
@@ -802,8 +843,20 @@ export async function POST(req: NextRequest) {
   "locked": false,
   "createdAt": "timestamp",
   "updatedAt": "timestamp",
-  "author": { "id": "uuid", "username": "string" },
-  "category": { "id": "uuid", "name": "string" },
+  "author": {
+    "id": "uuid",
+    "username": "string",
+    "avatarUrl": "string|null",
+    "role": "USER",
+    "createdAt": "timestamp",
+    "updatedAt": "timestamp"
+  },
+  "category": {
+    "id": "uuid",
+    "name": "string",
+    "description": "string|null",
+    "createdAt": "timestamp"
+  },
   "_count": { "likes": 0, "comments": 0 }
 }
 \end{lstlisting}
@@ -831,8 +884,20 @@ export async function POST(req: NextRequest) {
   "locked": false,
   "createdAt": "timestamp",
   "updatedAt": "timestamp",
-  "category": { "id": "uuid", "name": "string" },
-  "author": { "id": "uuid", "username": "string" },
+  "author": {
+    "id": "uuid",
+    "username": "string",
+    "avatarUrl": "string|null",
+    "role": "USER",
+    "createdAt": "timestamp",
+    "updatedAt": "timestamp"
+  },
+  "category": {
+    "id": "uuid",
+    "name": "string",
+    "description": "string|null",
+    "createdAt": "timestamp"
+  },
   "_count": { "likes": 0, "comments": 0 }
 }
 \end{lstlisting}
@@ -848,7 +913,7 @@ export async function POST(req: NextRequest) {
 \end{lstlisting}
 
 \subsubsection{POST /api/posts/:id/lock}
-\textbf{Headers:} Authorization: Bearer \{token\} (Owner or admin)
+\textbf{Headers:} Authorization: Bearer \{token\} (Owner only)
 
 \textbf{Response (200):}
 \begin{lstlisting}
@@ -859,7 +924,7 @@ export async function POST(req: NextRequest) {
 \end{lstlisting}
 
 \subsubsection{POST /api/posts/:id/unlock}
-\textbf{Headers:} Authorization: Bearer \{token\} (Owner or admin)
+\textbf{Headers:} Authorization: Bearer \{token\} (Owner only)
 
 \textbf{Response (200):}
 \begin{lstlisting}
@@ -878,8 +943,17 @@ export async function POST(req: NextRequest) {
   "comments": [
     {
       "id": "uuid",
+      "postId": "uuid",
+      "authorId": "uuid",
       "content": "string",
-      "author": { "id": "uuid", "username": "string" },
+      "author": {
+        "id": "uuid",
+        "username": "string",
+        "avatarUrl": "string|null",
+        "role": "USER",
+        "createdAt": "timestamp",
+        "updatedAt": "timestamp"
+      },
       "parentId": null,
       "depth": 0,
       "locked": false,
@@ -889,8 +963,17 @@ export async function POST(req: NextRequest) {
       "replies": [
         {
           "id": "uuid",
+          "postId": "uuid",
+          "authorId": "uuid",
           "content": "string",
-          "author": { "id": "uuid", "username": "string" },
+          "author": {
+            "id": "uuid",
+            "username": "string",
+            "avatarUrl": "string|null",
+            "role": "USER",
+            "createdAt": "timestamp",
+            "updatedAt": "timestamp"
+          },
           "parentId": "parent-uuid",
           "depth": 1,
           "locked": false,
@@ -923,7 +1006,14 @@ export async function POST(req: NextRequest) {
   "postId": "uuid",
   "authorId": "uuid",
   "content": "string",
-  "author": { "id": "uuid", "username": "string" },
+  "author": {
+    "id": "uuid",
+    "username": "string",
+    "avatarUrl": "string|null",
+    "role": "USER",
+    "createdAt": "timestamp",
+    "updatedAt": "timestamp"
+  },
   "parentId": "uuid", // null for top-level comments
   "depth": 0,
   "locked": false,
@@ -947,8 +1037,22 @@ export async function POST(req: NextRequest) {
 \begin{lstlisting}
 {
   "id": "uuid",
+  "postId": "uuid",
+  "authorId": "uuid",
+  "parentId": null,
   "content": "string",
+  "depth": 0,
+  "locked": false,
+  "createdAt": "timestamp",
   "updatedAt": "timestamp",
+  "author": {
+    "id": "uuid",
+    "username": "string",
+    "avatarUrl": "string|null",
+    "role": "USER",
+    "createdAt": "timestamp",
+    "updatedAt": "timestamp"
+  },
   "_count": { "likes": 0 }
 }
 \end{lstlisting}
@@ -964,7 +1068,7 @@ export async function POST(req: NextRequest) {
 \end{lstlisting}
 
 \subsubsection{POST /api/comments/:id/lock}
-\textbf{Headers:} Authorization: Bearer \{token\} (Owner or admin)
+\textbf{Headers:} Authorization: Bearer \{token\} (Owner only)
 
 \textbf{Response (200):}
 \begin{lstlisting}
@@ -975,7 +1079,7 @@ export async function POST(req: NextRequest) {
 \end{lstlisting}
 
 \subsubsection{POST /api/comments/:id/unlock}
-\textbf{Headers:} Authorization: Bearer \{token\} (Owner or admin)
+\textbf{Headers:} Authorization: Bearer \{token\} (Owner only)
 
 \textbf{Response (200):}
 \begin{lstlisting}
@@ -1029,17 +1133,22 @@ export async function POST(req: NextRequest) {
   "notifications": [
     {
       "id": "uuid",
+      "userId": "uuid",
       "type": "COMMENT|LIKE|REPLY|MENTION|MODERATION",
       "content": "string",
-      "actorId": "uuid",
+      "actorId": "uuid|null",
       "postId": "uuid|null",
-      "commentId": null,
+      "commentId": "uuid|null",
       "isRead": false,
       "createdAt": "timestamp",
       "actor": {
         "id": "uuid",
-        "username": "string"
-      }
+        "username": "string",
+        "avatarUrl": "string|null",
+        "role": "USER",
+        "createdAt": "timestamp",
+        "updatedAt": "timestamp"
+      } // or null when the notification has no actor
     }
   ]
 }
@@ -1052,7 +1161,22 @@ export async function POST(req: NextRequest) {
 \begin{lstlisting}
 {
   "id": "uuid",
-  "isRead": true
+  "userId": "uuid",
+  "actorId": "uuid|null",
+  "type": "COMMENT|LIKE|REPLY|MENTION|MODERATION",
+  "content": "string",
+  "postId": "uuid|null",
+  "commentId": "uuid|null",
+  "isRead": true,
+  "createdAt": "timestamp",
+  "actor": {
+    "id": "uuid",
+    "username": "string",
+    "avatarUrl": "string|null",
+    "role": "USER",
+    "createdAt": "timestamp",
+    "updatedAt": "timestamp"
+  }
 }
 \end{lstlisting}
 
@@ -1108,7 +1232,9 @@ export async function POST(req: NextRequest) {
     "username": "string",
     "email": "string",
     "avatarUrl": "string|null",
-    "role": "USER"
+    "role": "USER",
+    "createdAt": "timestamp",
+    "updatedAt": "timestamp"
   }
 ]
 \end{lstlisting}
@@ -1127,7 +1253,12 @@ export async function POST(req: NextRequest) {
 \begin{lstlisting}
 {
   "id": "uuid",
-  "role": "ADMIN"
+  "username": "string",
+  "email": "string",
+  "avatarUrl": "string|null",
+  "role": "ADMIN",
+  "createdAt": "timestamp",
+  "updatedAt": "timestamp"
 }
 \end{lstlisting}
 
@@ -1211,6 +1342,8 @@ Users \textbf{cannot}:
 \begin{itemize}
     \item Edit or delete posts created by other users
     \item Edit or delete comments created by other users
+    \item Lock or unlock posts created by other users
+    \item Lock or unlock comments created by other users
     \item Access or manage other users' notifications
     \item Perform administrative actions
     \item Change roles
@@ -1228,8 +1361,6 @@ Administrators (\texttt{role: "ADMIN"}) have all user permissions plus:
     \item Create categories
     \item View all users
     \item Change user roles
-    \item Lock and unlock any post
-    \item Lock and unlock any comment
 \end{itemize}
 
 \subsection{Moderation Notifications}
