@@ -64,10 +64,7 @@ export async function requireSession(
   );
 }
 
-export function requireRole(
-  session: AuthenticatedSession,
-  role: Role,
-) {
+export function requireRole(session: AuthenticatedSession, role: Role) {
   if (session.user.role !== role) {
     throw new ForbiddenError();
   }
