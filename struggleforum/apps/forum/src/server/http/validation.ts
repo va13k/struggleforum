@@ -62,3 +62,7 @@ export function parseParams<T extends z.ZodTypeAny>(
     data: parsedParams.data as z.infer<T>,
   };
 }
+
+export function resolveRouteParams<T>(params: Promise<T> | T) {
+  return Promise.resolve(params);
+}
