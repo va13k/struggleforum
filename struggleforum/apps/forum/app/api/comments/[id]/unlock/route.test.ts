@@ -4,7 +4,7 @@ import { POST } from "./route";
 import { apiRoutes } from "@/src/lib/api-routes";
 import * as commentService from "@/src/features/comments/service";
 import * as sessionModule from "@/src/server/auth/session";
-import { makeSession, makeUser } from "@/src/test/factories";
+import { makeSession } from "@/src/test/factories";
 
 vi.mock("@/src/server/db/prisma", () => ({ prisma: {} }));
 vi.mock("@/src/features/comments/service", () => ({ setCommentLocked: vi.fn() }));
@@ -20,8 +20,8 @@ const COMMENT_ID = "c4cadf12-8dc8-4f15-8ce8-3f2ec7107d9a";
 describe("/api/comments/[id]/unlock route", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("unlocks a comment for an admin", async () => {
-    const session = makeSession({ user: makeUser({ role: "ADMIN" }) });
+  it("unlocks a comment for the owner", async () => {
+    const session = makeSession();
     vi.mocked(sessionModule.requireSession).mockResolvedValue(session as any);
     vi.mocked(commentService.setCommentLocked).mockResolvedValue({
       id: COMMENT_ID,

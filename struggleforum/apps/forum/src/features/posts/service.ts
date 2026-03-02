@@ -153,7 +153,7 @@ export async function setPostLocked(
     throw new NotFoundError("Post not found");
   }
 
-  if (post.authorId !== actor.id && actor.role !== "ADMIN") {
+  if (post.authorId !== actor.id) {
     throw new ForbiddenError();
   }
 

@@ -57,24 +57,20 @@ describe("posts service", () => {
     expect(result).toEqual({ id: postId, locked: true });
   });
 
-  it("allows an admin to lock another user's post", async () => {
+  it("rejects locking by an admin who is not the owner", async () => {
     vi.mocked(postRepository.getPostOwnerRecord).mockResolvedValue({
       id: postId,
       authorId: owner.id,
       categoryId: originalCategoryId,
       locked: false,
     } as any);
-    vi.mocked(postRepository.setPostLocked).mockResolvedValue({
-      id: postId,
-      locked: true,
-    } as any);
 
-    const result = await setPostLocked(prisma, admin, postId, true);
-
-    expect(result).toEqual({ id: postId, locked: true });
+    await expect(setPostLocked(prisma, admin, postId, true)).rejects.toBeInstanceOf(
+      ForbiddenError,
+    );
   });
 
-  it("rejects locking by a non-owner non-admin", async () => {
+  it("rejects locking by a non-owner", async () => {
     vi.mocked(postRepository.getPostOwnerRecord).mockResolvedValue({
       id: postId,
       authorId: owner.id,

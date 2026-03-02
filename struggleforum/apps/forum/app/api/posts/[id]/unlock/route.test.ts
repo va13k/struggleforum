@@ -4,7 +4,7 @@ import { POST } from "./route";
 import { apiRoutes } from "@/src/lib/api-routes";
 import * as postService from "@/src/features/posts/service";
 import * as sessionModule from "@/src/server/auth/session";
-import { makeSession, makeUser } from "@/src/test/factories";
+import { makeSession } from "@/src/test/factories";
 
 vi.mock("@/src/server/db/prisma", () => ({ prisma: {} }));
 vi.mock("@/src/features/posts/service", () => ({ setPostLocked: vi.fn() }));
@@ -20,8 +20,8 @@ const POST_ID = "b4cadf12-8dc8-4f15-8ce8-3f2ec7107d9a";
 describe("/api/posts/[id]/unlock route", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("unlocks a post for an admin", async () => {
-    const session = makeSession({ user: makeUser({ role: "ADMIN" }) });
+  it("unlocks a post for the owner", async () => {
+    const session = makeSession();
     vi.mocked(sessionModule.requireSession).mockResolvedValue(session as any);
     vi.mocked(postService.setPostLocked).mockResolvedValue({
       id: POST_ID,

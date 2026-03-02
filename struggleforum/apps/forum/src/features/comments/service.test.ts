@@ -56,7 +56,7 @@ describe("comments service", () => {
     expect(result).toEqual({ id: commentId, locked: true });
   });
 
-  it("allows an admin to lock another user's comment", async () => {
+  it("rejects locking by an admin who is not the owner", async () => {
     vi.mocked(commentRepository.getCommentById).mockResolvedValue({
       id: commentId,
       postId: "post-1",
@@ -65,17 +65,13 @@ describe("comments service", () => {
       depth: 0,
       locked: false,
     } as any);
-    vi.mocked(commentRepository.setCommentLocked).mockResolvedValue({
-      id: commentId,
-      locked: true,
-    } as any);
 
-    const result = await setCommentLocked(prisma, admin, commentId, true);
-
-    expect(result).toEqual({ id: commentId, locked: true });
+    await expect(setCommentLocked(prisma, admin, commentId, true)).rejects.toBeInstanceOf(
+      ForbiddenError,
+    );
   });
 
-  it("rejects locking by a non-owner non-admin", async () => {
+  it("rejects locking by a non-owner", async () => {
     vi.mocked(commentRepository.getCommentById).mockResolvedValue({
       id: commentId,
       postId: "post-1",
