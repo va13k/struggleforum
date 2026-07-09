@@ -1,17 +1,18 @@
 import type { NextConfig } from "next";
 
-const isProd = process.env.NODE_ENV === "production";
-
 const repoName = "struggleforum";
+const basePath =
+  process.env.NEXT_PUBLIC_BASE_PATH ??
+  (process.env.GITHUB_PAGES === "true" ? `/${repoName}` : "");
 
 const nextConfig: NextConfig = {
   output: "export",
-  basePath: isProd ? `/${repoName}` : undefined,
-  assetPrefix: isProd ? `/${repoName}/` : undefined,
+  basePath: basePath || undefined,
+  assetPrefix: basePath ? `${basePath}/` : undefined,
   images: { unoptimized: true },
   trailingSlash: true,
   env: {
-    NEXT_PUBLIC_BASE_PATH: isProd ? `/${repoName}` : "",
+    NEXT_PUBLIC_BASE_PATH: basePath,
   },
 };
 

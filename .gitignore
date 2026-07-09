@@ -56,3 +56,6 @@ docker-data/
 # caches
 .turbo
 .bun
+
+# additional redundant files and folders
+.vscode

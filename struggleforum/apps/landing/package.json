@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "deploy": "npm run build && touch out/.nojekyll && gh-pages -d out --dotfiles",
+    "deploy": "GITHUB_PAGES=true npm run build && touch out/.nojekyll && gh-pages -d out --dotfiles",
     "lint": "eslint",
     "typecheck": "tsc --noEmit"
   },

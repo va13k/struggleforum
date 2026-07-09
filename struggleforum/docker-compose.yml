@@ -1,13 +1,64 @@
-version: "3.9"
 services:
   db:
     image: postgres:16
     container_name: struggleforum-db
     restart: always
-    env_file: .env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-struggleforum}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-struggleforum}
+      POSTGRES_DB: ${POSTGRES_DB:-struggleforum}
     ports:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  forum-migrate:
+    build:
+      context: .
+      dockerfile: apps/forum/Dockerfile
+      target: builder
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-struggleforum}:${POSTGRES_PASSWORD:-struggleforum}@db:5432/${POSTGRES_DB:-struggleforum}?schema=public
+    command: npm exec -w @struggleforum/forum prisma migrate deploy
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+
+  forum:
+    build:
+      context: .
+      dockerfile: apps/forum/Dockerfile
+    container_name: struggleforum-forum
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-struggleforum}:${POSTGRES_PASSWORD:-struggleforum}@db:5432/${POSTGRES_DB:-struggleforum}?schema=public
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3001}
+    ports:
+      - "3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+      forum-migrate:
+        condition: service_completed_successfully
+
+  landing:
+    build:
+      context: .
+      dockerfile: apps/landing/Dockerfile
+    container_name: struggleforum-landing
+    restart: unless-stopped
+    ports:
+      - "3001:80"
+
 volumes:
   pgdata: {}
