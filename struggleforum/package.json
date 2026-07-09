@@ -10,7 +10,8 @@
     "dev:landing": "npm run dev -w @struggleforum/landing",
     "build": "npm run build --workspaces --if-present",
     "test": "npm run test --workspaces --if-present --",
-    "typecheck": "npm run typecheck --workspaces --if-present"
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "seed:forum": "npm run seed -w @struggleforum/forum"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3"
