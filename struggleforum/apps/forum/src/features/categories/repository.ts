@@ -48,3 +48,35 @@ export async function createCategory(
     select: categorySelect,
   });
 }
+
+export async function updateCategory(
+  prisma: PrismaClient,
+  id: string,
+  data: Partial<{ name: string; description: string | null }>,
+): Promise<CategoryPublic> {
+  await prisma.category.update({ where: { id }, data, select: { id: true } });
+
+  return prisma.category.findUniqueOrThrow({
+    where: { id },
+    select: categorySelect,
+  });
+}
+
+export async function deleteCategory(
+  prisma: PrismaClient,
+  id: string,
+): Promise<void> {
+  await prisma.category.delete({ where: { id } });
+}
+
+export async function getCategoryPostCount(
+  prisma: PrismaClient,
+  id: string,
+): Promise<number | null> {
+  const category = await prisma.category.findUnique({
+    where: { id },
+    select: { _count: { select: { posts: true } } },
+  });
+
+  return category ? category._count.posts : null;
+}

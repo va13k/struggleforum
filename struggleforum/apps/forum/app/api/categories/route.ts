@@ -3,7 +3,10 @@ import { prisma } from "@/src/server/db/prisma";
 import { requireAdmin, requireSession } from "@/src/server/auth/session";
 import { parseJson } from "@/src/server/http/validation";
 import { toErrorResponse } from "@/src/server/http/errors";
-import { createCategory, listCategories } from "@/src/features/categories/service";
+import {
+  createCategory,
+  listCategories,
+} from "@/src/features/categories/service";
 import { CreateCategoryBodySchema } from "@/src/features/categories/validation";
 
 export async function GET() {

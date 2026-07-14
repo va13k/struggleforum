@@ -66,9 +66,9 @@ describe("comments service", () => {
       locked: false,
     } as any);
 
-    await expect(setCommentLocked(prisma, admin, commentId, true)).rejects.toBeInstanceOf(
-      ForbiddenError,
-    );
+    await expect(
+      setCommentLocked(prisma, admin, commentId, true),
+    ).rejects.toBeInstanceOf(ForbiddenError);
   });
 
   it("rejects locking by a non-owner", async () => {
@@ -105,7 +105,12 @@ describe("comments service", () => {
       locked: true,
       createdAt: new Date(),
       updatedAt: new Date(),
-      author: { id: owner.id, username: "alice", avatarUrl: null, role: "USER" },
+      author: {
+        id: owner.id,
+        username: "alice",
+        avatarUrl: null,
+        role: "USER",
+      },
       _count: { likes: 0 },
     } as any);
 
@@ -128,7 +133,10 @@ describe("comments service", () => {
 
     await deleteComment(prisma, owner, commentId);
 
-    expect(commentRepository.deleteComment).toHaveBeenCalledWith(prisma, commentId);
+    expect(commentRepository.deleteComment).toHaveBeenCalledWith(
+      prisma,
+      commentId,
+    );
   });
 
   it("rejects normal comment deletion by admins when they are not the owner", async () => {
@@ -141,9 +149,9 @@ describe("comments service", () => {
       locked: false,
     } as any);
 
-    await expect(deleteComment(prisma, admin, commentId)).rejects.toBeInstanceOf(
-      ForbiddenError,
-    );
+    await expect(
+      deleteComment(prisma, admin, commentId),
+    ).rejects.toBeInstanceOf(ForbiddenError);
   });
 
   it("allows admin moderation delete with a notification reason", async () => {
@@ -156,17 +164,24 @@ describe("comments service", () => {
       locked: false,
     } as any);
 
-    await deleteCommentAsAdmin(prisma, admin, commentId, "Contains prohibited promotion");
-
-    expect(notificationService.createModerationNotification).toHaveBeenCalledWith(
+    await deleteCommentAsAdmin(
       prisma,
-      {
-        userId: owner.id,
-        actorId: admin.id,
-        targetLabel: "comment",
-        reason: "Contains prohibited promotion",
-      },
+      admin,
+      commentId,
+      "Contains prohibited promotion",
     );
-    expect(commentRepository.deleteComment).toHaveBeenCalledWith(prisma, commentId);
+
+    expect(
+      notificationService.createModerationNotification,
+    ).toHaveBeenCalledWith(prisma, {
+      userId: owner.id,
+      actorId: admin.id,
+      targetLabel: "comment",
+      reason: "Contains prohibited promotion",
+    });
+    expect(commentRepository.deleteComment).toHaveBeenCalledWith(
+      prisma,
+      commentId,
+    );
   });
 });

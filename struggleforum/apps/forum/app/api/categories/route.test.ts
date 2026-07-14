@@ -13,9 +13,9 @@ vi.mock("@/src/features/categories/service", () => ({
   createCategory: vi.fn(),
 }));
 vi.mock("@/src/server/auth/session", async () => {
-  const actual = await vi.importActual<typeof import("@/src/server/auth/session")>(
-    "@/src/server/auth/session",
-  );
+  const actual = await vi.importActual<
+    typeof import("@/src/server/auth/session")
+  >("@/src/server/auth/session");
   return { ...actual, requireSession: vi.fn(), requireAdmin: vi.fn() };
 });
 
@@ -34,13 +34,18 @@ describe("/api/categories route", () => {
     vi.mocked(sessionModule.requireSession).mockResolvedValue(
       makeSession({ user: makeUser({ role: "ADMIN" }) }) as any,
     );
-    vi.mocked(categoryService.createCategory).mockResolvedValue({ id: "category-1" } as any);
+    vi.mocked(categoryService.createCategory).mockResolvedValue({
+      id: "category-1",
+    } as any);
 
-    const req = new NextRequest(`http://localhost:3000${apiRoutes.categories.collection}`, {
-      method: "POST",
-      body: JSON.stringify({ name: "General" }),
-      headers: { "content-type": "application/json" },
-    });
+    const req = new NextRequest(
+      `http://localhost:3000${apiRoutes.categories.collection}`,
+      {
+        method: "POST",
+        body: JSON.stringify({ name: "General" }),
+        headers: { "content-type": "application/json" },
+      },
+    );
 
     const res = await POST(req);
 
@@ -48,16 +53,21 @@ describe("/api/categories route", () => {
   });
 
   it("returns 403 for non-admin category creation", async () => {
-    vi.mocked(sessionModule.requireSession).mockResolvedValue(makeSession() as any);
+    vi.mocked(sessionModule.requireSession).mockResolvedValue(
+      makeSession() as any,
+    );
     vi.mocked(sessionModule.requireAdmin).mockImplementation(() => {
       throw new ForbiddenError();
     });
 
-    const req = new NextRequest(`http://localhost:3000${apiRoutes.categories.collection}`, {
-      method: "POST",
-      body: JSON.stringify({ name: "General" }),
-      headers: { "content-type": "application/json" },
-    });
+    const req = new NextRequest(
+      `http://localhost:3000${apiRoutes.categories.collection}`,
+      {
+        method: "POST",
+        body: JSON.stringify({ name: "General" }),
+        headers: { "content-type": "application/json" },
+      },
+    );
 
     const res = await POST(req);
 

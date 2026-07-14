@@ -27,6 +27,7 @@ export const apiRoutes = {
   },
   categories: {
     collection: "/api/categories",
+    item: (id: string) => `/api/categories/${id}`,
   },
   likes: {
     collection: "/api/likes",
