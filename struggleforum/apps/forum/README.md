@@ -177,11 +177,28 @@ http://localhost:3000
 
 ## Testing
 
-Run forum tests:
+Run forum unit tests (mocked Prisma/session, no database required):
 
 ```bash
 npm run test -w @struggleforum/forum
 ```
+
+Run forum integration tests (exercises the real Postgres schema - DB-level
+constraints, cascade behavior, migrations):
+
+```bash
+# Requires the dev Postgres container running (docker compose up -d db)
+# and TEST_DATABASE_URL set in apps/forum/.env, pointing at a database
+# whose name ends in "_test" (see .env.example).
+npm run test:integration -w @struggleforum/forum
+```
+
+This first runs `scripts/setup-test-db.mjs`, which creates the test database
+if it doesn't already exist and applies all Prisma migrations to it, then
+runs the integration suite (`**/*.integration.test.ts`). Each test truncates
+all tables beforehand via `resetDatabase()` (`src/test/integration/reset-database.ts`),
+which refuses to run against any database whose name doesn't end in `_test` -
+it can never accidentally wipe your dev database.
 
 Run forum lint:
 
