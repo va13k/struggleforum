@@ -8,6 +8,13 @@ export default defineConfig({
     environment: "node",
     globals: true,
     setupFiles: ["./src/test/setup.ts"],
+    exclude: [
+      "**/node_modules/**",
+      "**/dist/**",
+      "**/.{idea,git,cache,output,temp}/**",
+      "**/.next/**",
+      "**/*.integration.test.ts",
+    ],
   },
   resolve: {
     alias: {

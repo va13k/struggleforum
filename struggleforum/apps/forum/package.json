@@ -11,7 +11,9 @@
     "seed": "node prisma/seed.mjs",
     "test": "vitest",
     "test:ui": "vitest --ui",
-    "test:coverage": "vitest --coverage"
+    "test:coverage": "vitest --coverage",
+    "pretest:integration": "node scripts/setup-test-db.mjs",
+    "test:integration": "vitest run --config vitest.integration.config.ts"
   },
   "dependencies": {
     "@prisma/adapter-neon": "^7.3.0",
