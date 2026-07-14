@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { deleteCategory, updateCategory } from "./service";
 import * as categoryRepository from "./repository";
-import { ConflictError, NotFoundError } from "@/src/server/http/errors";
+import { NotFoundError } from "@/src/server/http/errors";
 
 vi.mock("./repository", () => ({
   getCategoryById: vi.fn(),
@@ -64,8 +64,9 @@ describe("categories service", () => {
     } as any);
     vi.mocked(categoryRepository.getCategoryPostCount).mockResolvedValue(0);
 
-    await deleteCategory(prisma, categoryId);
+    const result = await deleteCategory(prisma, categoryId);
 
+    expect(result).toEqual({ deletedPostCount: 0 });
     expect(categoryRepository.deleteCategory).toHaveBeenCalledWith(
       prisma,
       categoryId,
@@ -80,7 +81,7 @@ describe("categories service", () => {
     );
   });
 
-  it("rejects deleting a category with existing posts", async () => {
+  it("cascades and reports the deleted post count when the category has posts", async () => {
     vi.mocked(categoryRepository.getCategoryById).mockResolvedValue({
       id: categoryId,
       name: "General",
@@ -89,9 +90,12 @@ describe("categories service", () => {
     } as any);
     vi.mocked(categoryRepository.getCategoryPostCount).mockResolvedValue(3);
 
-    await expect(deleteCategory(prisma, categoryId)).rejects.toBeInstanceOf(
-      ConflictError,
+    const result = await deleteCategory(prisma, categoryId);
+
+    expect(result).toEqual({ deletedPostCount: 3 });
+    expect(categoryRepository.deleteCategory).toHaveBeenCalledWith(
+      prisma,
+      categoryId,
     );
-    expect(categoryRepository.deleteCategory).not.toHaveBeenCalled();
   });
 });

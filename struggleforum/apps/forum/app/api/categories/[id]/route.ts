@@ -81,8 +81,14 @@ export async function DELETE(
   try {
     const session = await requireSession(prisma, req);
     requireAdmin(session);
-    await deleteCategory(prisma, parsedParams.data.id);
-    return NextResponse.json({ message: "Category deleted successfully" });
+    const { deletedPostCount } = await deleteCategory(
+      prisma,
+      parsedParams.data.id,
+    );
+    return NextResponse.json({
+      message: "Category deleted successfully",
+      deletedPostCount,
+    });
   } catch (error) {
     return toErrorResponse(error, "Failed to delete category.");
   }

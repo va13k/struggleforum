@@ -56,7 +56,7 @@ model Post {
   updatedAt     DateTime  @updatedAt @map("updated_at")
 
   author        User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  category      Category  @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  category      Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
 
   comments      Comment[]
   likes         Like[]

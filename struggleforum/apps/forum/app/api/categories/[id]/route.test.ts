@@ -4,11 +4,7 @@ import { DELETE, GET, PUT } from "./route";
 import { apiRoutes } from "@/src/lib/api-routes";
 import * as categoryService from "@/src/features/categories/service";
 import * as sessionModule from "@/src/server/auth/session";
-import {
-  ConflictError,
-  ForbiddenError,
-  NotFoundError,
-} from "@/src/server/http/errors";
+import { ForbiddenError, NotFoundError } from "@/src/server/http/errors";
 import { makeSession, makeUser } from "@/src/test/factories";
 
 vi.mock("@/src/server/db/prisma", () => ({ prisma: {} }));
@@ -85,6 +81,9 @@ describe("/api/categories/[id] route", () => {
     vi.mocked(sessionModule.requireSession).mockResolvedValue(
       makeSession({ user: makeUser({ role: "ADMIN" }) }) as any,
     );
+    vi.mocked(categoryService.deleteCategory).mockResolvedValue({
+      deletedPostCount: 0,
+    } as any);
 
     const req = new NextRequest(
       `http://localhost:3000${apiRoutes.categories.item(CATEGORY_ID)}`,
@@ -94,21 +93,23 @@ describe("/api/categories/[id] route", () => {
     );
 
     const res = await DELETE(req, { params: { id: CATEGORY_ID } });
+    const body = await res.json();
 
     expect(res.status).toBe(200);
+    expect(body.deletedPostCount).toBe(0);
     expect(categoryService.deleteCategory).toHaveBeenCalledWith(
       expect.anything(),
       CATEGORY_ID,
     );
   });
 
-  it("returns 409 when deleting a category with existing posts", async () => {
+  it("cascades and reports the deleted post count when the category has posts", async () => {
     vi.mocked(sessionModule.requireSession).mockResolvedValue(
       makeSession({ user: makeUser({ role: "ADMIN" }) }) as any,
     );
-    vi.mocked(categoryService.deleteCategory).mockRejectedValue(
-      new ConflictError("Cannot delete category with existing posts"),
-    );
+    vi.mocked(categoryService.deleteCategory).mockResolvedValue({
+      deletedPostCount: 3,
+    } as any);
 
     const req = new NextRequest(
       `http://localhost:3000${apiRoutes.categories.item(CATEGORY_ID)}`,
@@ -118,8 +119,10 @@ describe("/api/categories/[id] route", () => {
     );
 
     const res = await DELETE(req, { params: { id: CATEGORY_ID } });
+    const body = await res.json();
 
-    expect(res.status).toBe(409);
+    expect(res.status).toBe(200);
+    expect(body.deletedPostCount).toBe(3);
   });
 
   it("returns 403 for non-admin category update", async () => {

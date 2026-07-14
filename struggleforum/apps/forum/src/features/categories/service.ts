@@ -12,7 +12,7 @@ import {
   CreateCategoryBodySchema,
   UpdateCategoryBodySchema,
 } from "./validation";
-import { ConflictError, NotFoundError } from "@/src/server/http/errors";
+import { NotFoundError } from "@/src/server/http/errors";
 
 export async function listCategories(prisma: PrismaClient) {
   return listCategoriesRepo(prisma);
@@ -65,11 +65,9 @@ export async function deleteCategory(prisma: PrismaClient, id: string) {
     throw new NotFoundError("Category not found");
   }
 
-  const postCount = await getCategoryPostCount(prisma, id);
-
-  if (postCount && postCount > 0) {
-    throw new ConflictError("Cannot delete category with existing posts");
-  }
+  const deletedPostCount = (await getCategoryPostCount(prisma, id)) ?? 0;
 
   await deleteCategoryRepo(prisma, id);
+
+  return { deletedPostCount };
 }
