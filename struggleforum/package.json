@@ -11,9 +11,16 @@
     "build": "npm run build --workspaces --if-present",
     "test": "npm run test --workspaces --if-present --",
     "typecheck": "npm run typecheck --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "seed:forum": "npm run seed -w @struggleforum/forum"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3"
+  },
+  "devDependencies": {
+    "eslint-config-prettier": "^10.1.8",
+    "prettier": "^3.9.5"
   }
 }

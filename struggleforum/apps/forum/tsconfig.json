@@ -18,15 +18,14 @@
         "name": "next"
       }
     ],
-    "baseUrl": ".",
     "paths": {
       "@/*": ["./*"],
-      "@/app/*": ["app/*"],
-      "@/src/*": ["src/*"],
-      "@/features/*": ["src/features/*"],
-      "@/server/*": ["src/server/*"],
-      "@/components/*": ["src/components/*"],
-      "@/lib/*": ["src/lib/*"]
+      "@/app/*": ["./app/*"],
+      "@/src/*": ["./src/*"],
+      "@/features/*": ["./src/features/*"],
+      "@/server/*": ["./src/server/*"],
+      "@/components/*": ["./src/components/*"],
+      "@/lib/*": ["./src/lib/*"]
     }
   },
   "include": [

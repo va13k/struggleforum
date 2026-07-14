@@ -1,2 +1,2 @@
-import config from "@struggleforum/packages/eslint-config";
+import config from "@struggleforum/eslint-config";
 export default config;
