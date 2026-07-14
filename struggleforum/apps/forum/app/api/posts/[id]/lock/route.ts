@@ -19,7 +19,12 @@ export async function POST(
 
   try {
     const session = await requireSession(prisma, req);
-    const post = await setPostLocked(prisma, session.user, parsedParams.data.id, true);
+    const post = await setPostLocked(
+      prisma,
+      session.user,
+      parsedParams.data.id,
+      true,
+    );
     return NextResponse.json(post);
   } catch (error) {
     return toErrorResponse(error, "Failed to lock post.");

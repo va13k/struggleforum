@@ -9,9 +9,9 @@ import { makeSession, makeUser } from "@/src/test/factories";
 vi.mock("@/src/server/db/prisma", () => ({ prisma: {} }));
 vi.mock("@/src/features/admin/service", () => ({ deleteComment: vi.fn() }));
 vi.mock("@/src/server/auth/session", async () => {
-  const actual = await vi.importActual<typeof import("@/src/server/auth/session")>(
-    "@/src/server/auth/session",
-  );
+  const actual = await vi.importActual<
+    typeof import("@/src/server/auth/session")
+  >("@/src/server/auth/session");
   return { ...actual, requireSession: vi.fn(), requireAdmin: vi.fn() };
 });
 

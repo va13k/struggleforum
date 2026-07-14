@@ -17,7 +17,7 @@ export default function Header() {
   const isActive = useMemo(
     () => (href: string) =>
       href === "/" ? pathname === "/" : pathname?.startsWith(href),
-    [pathname]
+    [pathname],
   );
 
   return (

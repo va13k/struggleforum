@@ -9,9 +9,9 @@ import { makeSession, makeUser } from "@/src/test/factories";
 vi.mock("@/src/server/db/prisma", () => ({ prisma: {} }));
 vi.mock("@/src/features/admin/service", () => ({ deletePost: vi.fn() }));
 vi.mock("@/src/server/auth/session", async () => {
-  const actual = await vi.importActual<typeof import("@/src/server/auth/session")>(
-    "@/src/server/auth/session",
-  );
+  const actual = await vi.importActual<
+    typeof import("@/src/server/auth/session")
+  >("@/src/server/auth/session");
   return { ...actual, requireSession: vi.fn(), requireAdmin: vi.fn() };
 });
 
@@ -24,11 +24,14 @@ describe("/api/admin/posts/[id] route", () => {
     const session = makeSession({ user: makeUser({ role: "ADMIN" }) });
     vi.mocked(sessionModule.requireSession).mockResolvedValue(session as any);
 
-    const req = new NextRequest(`http://localhost:3000${apiRoutes.admin.posts.item(POST_ID)}`, {
-      method: "DELETE",
-      body: JSON.stringify({ reason: "Advertising prohibited services" }),
-      headers: { "content-type": "application/json" },
-    });
+    const req = new NextRequest(
+      `http://localhost:3000${apiRoutes.admin.posts.item(POST_ID)}`,
+      {
+        method: "DELETE",
+        body: JSON.stringify({ reason: "Advertising prohibited services" }),
+        headers: { "content-type": "application/json" },
+      },
+    );
 
     const res = await DELETE(req, { params: { id: POST_ID } });
 
@@ -42,11 +45,14 @@ describe("/api/admin/posts/[id] route", () => {
   });
 
   it("returns 400 when reason is missing", async () => {
-    const req = new NextRequest(`http://localhost:3000${apiRoutes.admin.posts.item(POST_ID)}`, {
-      method: "DELETE",
-      body: JSON.stringify({}),
-      headers: { "content-type": "application/json" },
-    });
+    const req = new NextRequest(
+      `http://localhost:3000${apiRoutes.admin.posts.item(POST_ID)}`,
+      {
+        method: "DELETE",
+        body: JSON.stringify({}),
+        headers: { "content-type": "application/json" },
+      },
+    );
 
     const res = await DELETE(req, { params: { id: POST_ID } });
 

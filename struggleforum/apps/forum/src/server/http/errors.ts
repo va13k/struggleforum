@@ -46,7 +46,10 @@ export function toErrorResponse(
   fallbackMessage = "Internal server error",
 ) {
   if (error instanceof HttpError) {
-    return NextResponse.json({ error: error.message }, { status: error.status });
+    return NextResponse.json(
+      { error: error.message },
+      { status: error.status },
+    );
   }
 
   if (error instanceof Prisma.PrismaClientKnownRequestError) {
@@ -65,7 +68,10 @@ export function toErrorResponse(
     }
 
     if (error.code === "P2025") {
-      return NextResponse.json({ error: "Resource not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Resource not found" },
+        { status: 404 },
+      );
     }
 
     if (error.code === "P2021" || error.code === "P2022") {

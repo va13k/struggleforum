@@ -32,7 +32,12 @@ export async function PUT(
 
   try {
     const session = await requireSession(prisma, req);
-    const comment = await updateComment(prisma, session.user, parsedParams.data.id, body.data);
+    const comment = await updateComment(
+      prisma,
+      session.user,
+      parsedParams.data.id,
+      body.data,
+    );
     return NextResponse.json(comment);
   } catch (error) {
     return toErrorResponse(error, "Failed to update comment.");

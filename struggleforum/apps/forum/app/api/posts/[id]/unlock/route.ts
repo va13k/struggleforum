@@ -19,7 +19,12 @@ export async function POST(
 
   try {
     const session = await requireSession(prisma, req);
-    const post = await setPostLocked(prisma, session.user, parsedParams.data.id, false);
+    const post = await setPostLocked(
+      prisma,
+      session.user,
+      parsedParams.data.id,
+      false,
+    );
     return NextResponse.json(post);
   } catch (error) {
     return toErrorResponse(error, "Failed to unlock post.");

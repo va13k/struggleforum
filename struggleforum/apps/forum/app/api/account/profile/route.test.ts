@@ -9,9 +9,9 @@ import { makeSession, makeUser } from "@/src/test/factories";
 vi.mock("@/src/server/db/prisma", () => ({ prisma: {} }));
 vi.mock("@/src/features/users/service", () => ({ updateOwnProfile: vi.fn() }));
 vi.mock("@/src/server/auth/session", async () => {
-  const actual = await vi.importActual<typeof import("@/src/server/auth/session")>(
-    "@/src/server/auth/session",
-  );
+  const actual = await vi.importActual<
+    typeof import("@/src/server/auth/session")
+  >("@/src/server/auth/session");
   return { ...actual, requireSession: vi.fn() };
 });
 
@@ -22,7 +22,9 @@ describe("/api/account/profile route", () => {
     const session = makeSession();
     vi.mocked(sessionModule.requireSession).mockResolvedValue(session as any);
 
-    const res = await GET(new NextRequest(`http://localhost:3000${apiRoutes.account.profile}`));
+    const res = await GET(
+      new NextRequest(`http://localhost:3000${apiRoutes.account.profile}`),
+    );
     const data = await res.json();
 
     expect(res.status).toBe(200);
@@ -33,13 +35,18 @@ describe("/api/account/profile route", () => {
     const session = makeSession();
     const updatedUser = makeUser({ username: "alice-updated" });
     vi.mocked(sessionModule.requireSession).mockResolvedValue(session as any);
-    vi.mocked(userService.updateOwnProfile).mockResolvedValue(updatedUser as any);
+    vi.mocked(userService.updateOwnProfile).mockResolvedValue(
+      updatedUser as any,
+    );
 
-    const req = new NextRequest(`http://localhost:3000${apiRoutes.account.profile}`, {
-      method: "PATCH",
-      body: JSON.stringify({ username: "alice-updated" }),
-      headers: { "content-type": "application/json" },
-    });
+    const req = new NextRequest(
+      `http://localhost:3000${apiRoutes.account.profile}`,
+      {
+        method: "PATCH",
+        body: JSON.stringify({ username: "alice-updated" }),
+        headers: { "content-type": "application/json" },
+      },
+    );
 
     const res = await PATCH(req);
 

@@ -12,9 +12,9 @@ vi.mock("@/src/features/comments/service", () => ({
   createComment: vi.fn(),
 }));
 vi.mock("@/src/server/auth/session", async () => {
-  const actual = await vi.importActual<typeof import("@/src/server/auth/session")>(
-    "@/src/server/auth/session",
-  );
+  const actual = await vi.importActual<
+    typeof import("@/src/server/auth/session")
+  >("@/src/server/auth/session");
   return { ...actual, requireSession: vi.fn() };
 });
 
@@ -24,11 +24,18 @@ describe("/api/posts/[id]/comments route", () => {
   beforeEach(() => vi.clearAllMocks());
 
   it("returns post comments", async () => {
-    vi.mocked(commentService.listCommentsByPost).mockResolvedValue({ comments: [] } as any);
+    vi.mocked(commentService.listCommentsByPost).mockResolvedValue({
+      comments: [],
+    } as any);
 
-    const res = await GET(new NextRequest(`http://localhost:3000${apiRoutes.posts.comments(POST_ID)}`), {
-      params: { id: POST_ID },
-    });
+    const res = await GET(
+      new NextRequest(
+        `http://localhost:3000${apiRoutes.posts.comments(POST_ID)}`,
+      ),
+      {
+        params: { id: POST_ID },
+      },
+    );
 
     expect(res.status).toBe(200);
   });
@@ -36,13 +43,18 @@ describe("/api/posts/[id]/comments route", () => {
   it("creates a comment", async () => {
     const session = makeSession();
     vi.mocked(sessionModule.requireSession).mockResolvedValue(session as any);
-    vi.mocked(commentService.createComment).mockResolvedValue({ id: "comment-1" } as any);
+    vi.mocked(commentService.createComment).mockResolvedValue({
+      id: "comment-1",
+    } as any);
 
-    const req = new NextRequest(`http://localhost:3000${apiRoutes.posts.comments(POST_ID)}`, {
-      method: "POST",
-      body: JSON.stringify({ content: "Hello" }),
-      headers: { "content-type": "application/json" },
-    });
+    const req = new NextRequest(
+      `http://localhost:3000${apiRoutes.posts.comments(POST_ID)}`,
+      {
+        method: "POST",
+        body: JSON.stringify({ content: "Hello" }),
+        headers: { "content-type": "application/json" },
+      },
+    );
 
     const res = await POST(req, { params: { id: POST_ID } });
 

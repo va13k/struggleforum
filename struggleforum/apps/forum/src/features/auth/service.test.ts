@@ -26,9 +26,9 @@ vi.mock("./repository", () => ({
 }));
 
 vi.mock("@/src/server/auth/session", async () => {
-  const actual = await vi.importActual<typeof import("@/src/server/auth/session")>(
-    "@/src/server/auth/session",
-  );
+  const actual = await vi.importActual<
+    typeof import("@/src/server/auth/session")
+  >("@/src/server/auth/session");
 
   return {
     ...actual,
@@ -49,7 +49,9 @@ describe("auth service", () => {
 
     vi.mocked(userRepository.getUserAuthByEmail).mockResolvedValue(null);
     vi.mocked(userRepository.getUserByUsername).mockResolvedValue(null);
-    vi.mocked(bcrypt.default.hash).mockResolvedValue("hashed-password" as never);
+    vi.mocked(bcrypt.default.hash).mockResolvedValue(
+      "hashed-password" as never,
+    );
     vi.mocked(userRepository.createUser).mockResolvedValue(user as any);
     vi.mocked(sessionUtils.generateSessionToken).mockReturnValue("token");
     vi.mocked(authRepository.createSession).mockResolvedValue(session as any);
@@ -64,7 +66,10 @@ describe("auth service", () => {
       prisma,
       "alice@test.com",
     );
-    expect(userRepository.getUserByUsername).toHaveBeenCalledWith(prisma, "alice");
+    expect(userRepository.getUserByUsername).toHaveBeenCalledWith(
+      prisma,
+      "alice",
+    );
     expect(userRepository.createUser).toHaveBeenCalledWith(prisma, {
       username: "alice",
       email: "alice@test.com",

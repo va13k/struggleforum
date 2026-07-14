@@ -14,11 +14,17 @@ describe("/api/auth/login route", () => {
   it("logs in a user", async () => {
     vi.mocked(authService.login).mockResolvedValue({ token: "token" } as any);
 
-    const req = new NextRequest(`http://localhost:3000${apiRoutes.auth.login}`, {
-      method: "POST",
-      body: JSON.stringify({ email: "alice@test.com", password: "password123" }),
-      headers: { "content-type": "application/json" },
-    });
+    const req = new NextRequest(
+      `http://localhost:3000${apiRoutes.auth.login}`,
+      {
+        method: "POST",
+        body: JSON.stringify({
+          email: "alice@test.com",
+          password: "password123",
+        }),
+        headers: { "content-type": "application/json" },
+      },
+    );
 
     const res = await POST(req);
 
@@ -26,13 +32,21 @@ describe("/api/auth/login route", () => {
   });
 
   it("returns 401 for invalid credentials", async () => {
-    vi.mocked(authService.login).mockRejectedValue(new UnauthorizedError("Invalid email or password"));
+    vi.mocked(authService.login).mockRejectedValue(
+      new UnauthorizedError("Invalid email or password"),
+    );
 
-    const req = new NextRequest(`http://localhost:3000${apiRoutes.auth.login}`, {
-      method: "POST",
-      body: JSON.stringify({ email: "alice@test.com", password: "password123" }),
-      headers: { "content-type": "application/json" },
-    });
+    const req = new NextRequest(
+      `http://localhost:3000${apiRoutes.auth.login}`,
+      {
+        method: "POST",
+        body: JSON.stringify({
+          email: "alice@test.com",
+          password: "password123",
+        }),
+        headers: { "content-type": "application/json" },
+      },
+    );
 
     const res = await POST(req);
 

@@ -13,9 +13,9 @@ vi.mock("@/src/features/posts/service", () => ({
   deletePost: vi.fn(),
 }));
 vi.mock("@/src/server/auth/session", async () => {
-  const actual = await vi.importActual<typeof import("@/src/server/auth/session")>(
-    "@/src/server/auth/session",
-  );
+  const actual = await vi.importActual<
+    typeof import("@/src/server/auth/session")
+  >("@/src/server/auth/session");
   return { ...actual, requireSession: vi.fn() };
 });
 
@@ -25,11 +25,16 @@ describe("/api/posts/[id] route", () => {
   beforeEach(() => vi.clearAllMocks());
 
   it("returns a post by id", async () => {
-    vi.mocked(postService.getPostById).mockResolvedValue({ id: POST_ID } as any);
+    vi.mocked(postService.getPostById).mockResolvedValue({
+      id: POST_ID,
+    } as any);
 
-    const res = await GET(new NextRequest(`http://localhost:3000${apiRoutes.posts.item(POST_ID)}`), {
-      params: { id: POST_ID },
-    });
+    const res = await GET(
+      new NextRequest(`http://localhost:3000${apiRoutes.posts.item(POST_ID)}`),
+      {
+        params: { id: POST_ID },
+      },
+    );
 
     expect(res.status).toBe(200);
   });
@@ -39,11 +44,14 @@ describe("/api/posts/[id] route", () => {
     vi.mocked(sessionModule.requireSession).mockResolvedValue(session as any);
     vi.mocked(postService.updatePost).mockResolvedValue({ id: POST_ID } as any);
 
-    const req = new NextRequest(`http://localhost:3000${apiRoutes.posts.item(POST_ID)}`, {
-      method: "PUT",
-      body: JSON.stringify({ title: "Updated title" }),
-      headers: { "content-type": "application/json" },
-    });
+    const req = new NextRequest(
+      `http://localhost:3000${apiRoutes.posts.item(POST_ID)}`,
+      {
+        method: "PUT",
+        body: JSON.stringify({ title: "Updated title" }),
+        headers: { "content-type": "application/json" },
+      },
+    );
 
     const res = await PUT(req, { params: { id: POST_ID } });
 
@@ -60,13 +68,20 @@ describe("/api/posts/[id] route", () => {
     const session = makeSession();
     vi.mocked(sessionModule.requireSession).mockResolvedValue(session as any);
 
-    const req = new NextRequest(`http://localhost:3000${apiRoutes.posts.item(POST_ID)}`, {
-      method: "DELETE",
-    });
+    const req = new NextRequest(
+      `http://localhost:3000${apiRoutes.posts.item(POST_ID)}`,
+      {
+        method: "DELETE",
+      },
+    );
 
     const res = await DELETE(req, { params: { id: POST_ID } });
 
     expect(res.status).toBe(200);
-    expect(postService.deletePost).toHaveBeenCalledWith(expect.anything(), session.user, POST_ID);
+    expect(postService.deletePost).toHaveBeenCalledWith(
+      expect.anything(),
+      session.user,
+      POST_ID,
+    );
   });
 });

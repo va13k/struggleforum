@@ -14,9 +14,9 @@ vi.mock("@/src/features/users/service", () => ({
   getUserSessions: vi.fn(),
 }));
 vi.mock("@/src/server/auth/session", async () => {
-  const actual = await vi.importActual<typeof import("@/src/server/auth/session")>(
-    "@/src/server/auth/session",
-  );
+  const actual = await vi.importActual<
+    typeof import("@/src/server/auth/session")
+  >("@/src/server/auth/session");
   return { ...actual, requireSession: vi.fn(), requireSelfOrAdmin: vi.fn() };
 });
 
@@ -30,9 +30,12 @@ describe("/api/users/[id] route", () => {
       makePublicUser() as any,
     );
 
-    const res = await GET(new NextRequest(`http://localhost:3000${apiRoutes.users.item(USER_ID)}`), {
-      params: { id: USER_ID },
-    });
+    const res = await GET(
+      new NextRequest(`http://localhost:3000${apiRoutes.users.item(USER_ID)}`),
+      {
+        params: { id: USER_ID },
+      },
+    );
     const data = await res.json();
 
     expect(res.status).toBe(200);
@@ -41,7 +44,9 @@ describe("/api/users/[id] route", () => {
 
   it("returns 400 for invalid include values", async () => {
     const res = await GET(
-      new NextRequest(`http://localhost:3000${apiRoutes.users.item(USER_ID)}?include=likes`),
+      new NextRequest(
+        `http://localhost:3000${apiRoutes.users.item(USER_ID)}?include=likes`,
+      ),
       { params: { id: USER_ID } },
     );
 
@@ -49,14 +54,18 @@ describe("/api/users/[id] route", () => {
   });
 
   it("returns user posts when include=posts", async () => {
-    vi.mocked(sessionModule.requireSession).mockResolvedValue(makeSession() as any);
+    vi.mocked(sessionModule.requireSession).mockResolvedValue(
+      makeSession() as any,
+    );
     vi.mocked(userService.getUserWithPosts).mockResolvedValue({
       ...makePublicUser(),
       posts: [],
     } as any);
 
     const res = await GET(
-      new NextRequest(`http://localhost:3000${apiRoutes.users.item(USER_ID)}?include=posts`),
+      new NextRequest(
+        `http://localhost:3000${apiRoutes.users.item(USER_ID)}?include=posts`,
+      ),
       { params: { id: USER_ID } },
     );
     const data = await res.json();
@@ -66,14 +75,18 @@ describe("/api/users/[id] route", () => {
   });
 
   it("guards include=sessions behind self-or-admin", async () => {
-    vi.mocked(sessionModule.requireSession).mockResolvedValue(makeSession() as any);
+    vi.mocked(sessionModule.requireSession).mockResolvedValue(
+      makeSession() as any,
+    );
     vi.mocked(userService.getUserSessions).mockResolvedValue({
       ...makeUser(),
       sessions: [],
     } as any);
 
     const res = await GET(
-      new NextRequest(`http://localhost:3000${apiRoutes.users.item(USER_ID)}?include=sessions`),
+      new NextRequest(
+        `http://localhost:3000${apiRoutes.users.item(USER_ID)}?include=sessions`,
+      ),
       { params: { id: USER_ID } },
     );
     const data = await res.json();

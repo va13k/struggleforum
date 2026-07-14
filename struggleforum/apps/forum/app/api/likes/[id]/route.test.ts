@@ -9,9 +9,9 @@ import { makeSession } from "@/src/test/factories";
 vi.mock("@/src/server/db/prisma", () => ({ prisma: {} }));
 vi.mock("@/src/features/likes/service", () => ({ deleteLike: vi.fn() }));
 vi.mock("@/src/server/auth/session", async () => {
-  const actual = await vi.importActual<typeof import("@/src/server/auth/session")>(
-    "@/src/server/auth/session",
-  );
+  const actual = await vi.importActual<
+    typeof import("@/src/server/auth/session")
+  >("@/src/server/auth/session");
   return { ...actual, requireSession: vi.fn() };
 });
 
@@ -21,11 +21,16 @@ describe("/api/likes/[id] route", () => {
   beforeEach(() => vi.clearAllMocks());
 
   it("deletes a like", async () => {
-    vi.mocked(sessionModule.requireSession).mockResolvedValue(makeSession() as any);
+    vi.mocked(sessionModule.requireSession).mockResolvedValue(
+      makeSession() as any,
+    );
 
-    const req = new NextRequest(`http://localhost:3000${apiRoutes.likes.item(LIKE_ID)}`, {
-      method: "DELETE",
-    });
+    const req = new NextRequest(
+      `http://localhost:3000${apiRoutes.likes.item(LIKE_ID)}`,
+      {
+        method: "DELETE",
+      },
+    );
 
     const res = await DELETE(req, { params: { id: LIKE_ID } });
 

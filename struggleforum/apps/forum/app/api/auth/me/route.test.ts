@@ -8,9 +8,9 @@ import { makeSession } from "@/src/test/factories";
 
 vi.mock("@/src/server/db/prisma", () => ({ prisma: {} }));
 vi.mock("@/src/server/auth/session", async () => {
-  const actual = await vi.importActual<typeof import("@/src/server/auth/session")>(
-    "@/src/server/auth/session",
-  );
+  const actual = await vi.importActual<
+    typeof import("@/src/server/auth/session")
+  >("@/src/server/auth/session");
   return { ...actual, requireSession: vi.fn() };
 });
 
@@ -30,7 +30,9 @@ describe("/api/auth/me route", () => {
   });
 
   it("returns 401 when unauthorized", async () => {
-    vi.mocked(sessionModule.requireSession).mockRejectedValue(new UnauthorizedError());
+    vi.mocked(sessionModule.requireSession).mockRejectedValue(
+      new UnauthorizedError(),
+    );
 
     const req = new NextRequest(`http://localhost:3000${apiRoutes.auth.me}`);
     const res = await GET(req);

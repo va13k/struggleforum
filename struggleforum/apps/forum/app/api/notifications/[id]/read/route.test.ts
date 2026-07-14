@@ -7,11 +7,13 @@ import * as sessionModule from "@/src/server/auth/session";
 import { makeSession } from "@/src/test/factories";
 
 vi.mock("@/src/server/db/prisma", () => ({ prisma: {} }));
-vi.mock("@/src/features/notifications/service", () => ({ markNotificationRead: vi.fn() }));
+vi.mock("@/src/features/notifications/service", () => ({
+  markNotificationRead: vi.fn(),
+}));
 vi.mock("@/src/server/auth/session", async () => {
-  const actual = await vi.importActual<typeof import("@/src/server/auth/session")>(
-    "@/src/server/auth/session",
-  );
+  const actual = await vi.importActual<
+    typeof import("@/src/server/auth/session")
+  >("@/src/server/auth/session");
   return { ...actual, requireSession: vi.fn() };
 });
 
@@ -23,11 +25,16 @@ describe("/api/notifications/[id]/read route", () => {
   it("marks a notification as read", async () => {
     const session = makeSession();
     vi.mocked(sessionModule.requireSession).mockResolvedValue(session as any);
-    vi.mocked(notificationService.markNotificationRead).mockResolvedValue({ id: NOTIFICATION_ID } as any);
+    vi.mocked(notificationService.markNotificationRead).mockResolvedValue({
+      id: NOTIFICATION_ID,
+    } as any);
 
-    const req = new NextRequest(`http://localhost:3000${apiRoutes.notifications.markRead(NOTIFICATION_ID)}`, {
-      method: "PUT",
-    });
+    const req = new NextRequest(
+      `http://localhost:3000${apiRoutes.notifications.markRead(NOTIFICATION_ID)}`,
+      {
+        method: "PUT",
+      },
+    );
 
     const res = await PUT(req, { params: { id: NOTIFICATION_ID } });
 

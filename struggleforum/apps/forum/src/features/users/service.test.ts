@@ -34,13 +34,18 @@ describe("users service", () => {
 
     const result = await getUserById(prisma, baseUser.id);
 
-    expect(userRepository.getUserById).toHaveBeenCalledWith(prisma, baseUser.id);
+    expect(userRepository.getUserById).toHaveBeenCalledWith(
+      prisma,
+      baseUser.id,
+    );
     expect(result).toEqual(baseUser);
   });
 
   it("gets user by username", async () => {
     const prisma = {} as any;
-    vi.mocked(userRepository.getUserByUsername).mockResolvedValue(baseUser as any);
+    vi.mocked(userRepository.getUserByUsername).mockResolvedValue(
+      baseUser as any,
+    );
 
     const result = await getUserByUsername(prisma, baseUser.username);
 
@@ -54,11 +59,16 @@ describe("users service", () => {
   it("gets user with posts", async () => {
     const prisma = {} as any;
     const userWithPosts = { ...baseUser, posts: [] };
-    vi.mocked(userRepository.getUserWithPosts).mockResolvedValue(userWithPosts as any);
+    vi.mocked(userRepository.getUserWithPosts).mockResolvedValue(
+      userWithPosts as any,
+    );
 
     const result = await getUserWithPosts(prisma, baseUser.id);
 
-    expect(userRepository.getUserWithPosts).toHaveBeenCalledWith(prisma, baseUser.id);
+    expect(userRepository.getUserWithPosts).toHaveBeenCalledWith(
+      prisma,
+      baseUser.id,
+    );
     expect(result).toEqual(userWithPosts);
   });
 
@@ -81,11 +91,16 @@ describe("users service", () => {
   it("gets user sessions", async () => {
     const prisma = {} as any;
     const userWithSessions = { ...makeUser(), sessions: [] };
-    vi.mocked(userRepository.getUserSessions).mockResolvedValue(userWithSessions as any);
+    vi.mocked(userRepository.getUserSessions).mockResolvedValue(
+      userWithSessions as any,
+    );
 
     const result = await getUserSessions(prisma, baseUser.id);
 
-    expect(userRepository.getUserSessions).toHaveBeenCalledWith(prisma, baseUser.id);
+    expect(userRepository.getUserSessions).toHaveBeenCalledWith(
+      prisma,
+      baseUser.id,
+    );
     expect(result).toEqual(userWithSessions);
   });
 
@@ -93,7 +108,9 @@ describe("users service", () => {
     const prisma = {} as any;
     vi.mocked(userRepository.getUserById).mockResolvedValue(null);
 
-    await expect(getUserById(prisma, baseUser.id)).rejects.toThrow("User not found");
+    await expect(getUserById(prisma, baseUser.id)).rejects.toThrow(
+      "User not found",
+    );
   });
 
   it("updates own profile and normalizes fields", async () => {
@@ -108,11 +125,15 @@ describe("users service", () => {
       avatarUrl: "https://example.com/avatar.png",
     });
 
-    expect(userRepository.updateUser).toHaveBeenCalledWith(prisma, baseUser.id, {
-      username: undefined,
-      email: "alice@test.com",
-      avatarUrl: "https://example.com/avatar.png",
-    });
+    expect(userRepository.updateUser).toHaveBeenCalledWith(
+      prisma,
+      baseUser.id,
+      {
+        username: undefined,
+        email: "alice@test.com",
+        avatarUrl: "https://example.com/avatar.png",
+      },
+    );
     expect(result).toEqual(updatedUser);
   });
 
@@ -121,11 +142,17 @@ describe("users service", () => {
     const adminUser = makeUser({ role: Role.ADMIN });
     vi.mocked(userRepository.updateUser).mockResolvedValue(adminUser as any);
 
-    const result = await updateUserRole(prisma, baseUser.id, { role: Role.ADMIN });
-
-    expect(userRepository.updateUser).toHaveBeenCalledWith(prisma, baseUser.id, {
+    const result = await updateUserRole(prisma, baseUser.id, {
       role: Role.ADMIN,
     });
+
+    expect(userRepository.updateUser).toHaveBeenCalledWith(
+      prisma,
+      baseUser.id,
+      {
+        role: Role.ADMIN,
+      },
+    );
     expect(result).toEqual(adminUser);
   });
 });

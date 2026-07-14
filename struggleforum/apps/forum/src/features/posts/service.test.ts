@@ -65,9 +65,9 @@ describe("posts service", () => {
       locked: false,
     } as any);
 
-    await expect(setPostLocked(prisma, admin, postId, true)).rejects.toBeInstanceOf(
-      ForbiddenError,
-    );
+    await expect(
+      setPostLocked(prisma, admin, postId, true),
+    ).rejects.toBeInstanceOf(ForbiddenError);
   });
 
   it("rejects locking by a non-owner", async () => {
@@ -102,8 +102,18 @@ describe("posts service", () => {
       locked: true,
       createdAt: new Date(),
       updatedAt: new Date(),
-      author: { id: owner.id, username: "alice", avatarUrl: null, role: "USER" },
-      category: { id: nextCategoryId, name: "General", description: null, createdAt: new Date() },
+      author: {
+        id: owner.id,
+        username: "alice",
+        avatarUrl: null,
+        role: "USER",
+      },
+      category: {
+        id: nextCategoryId,
+        name: "General",
+        description: null,
+        createdAt: new Date(),
+      },
       _count: { likes: 0, comments: 0 },
     } as any);
 
@@ -150,17 +160,21 @@ describe("posts service", () => {
       locked: false,
     } as any);
 
-    await deletePostAsAdmin(prisma, admin, postId, "Advertising prohibited services");
-
-    expect(notificationService.createModerationNotification).toHaveBeenCalledWith(
+    await deletePostAsAdmin(
       prisma,
-      {
-        userId: owner.id,
-        actorId: admin.id,
-        targetLabel: "post",
-        reason: "Advertising prohibited services",
-      },
+      admin,
+      postId,
+      "Advertising prohibited services",
     );
+
+    expect(
+      notificationService.createModerationNotification,
+    ).toHaveBeenCalledWith(prisma, {
+      userId: owner.id,
+      actorId: admin.id,
+      targetLabel: "post",
+      reason: "Advertising prohibited services",
+    });
     expect(postRepository.deletePost).toHaveBeenCalledWith(prisma, postId);
   });
 });

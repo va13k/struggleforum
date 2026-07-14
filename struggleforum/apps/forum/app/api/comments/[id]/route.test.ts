@@ -7,11 +7,14 @@ import * as sessionModule from "@/src/server/auth/session";
 import { makeSession } from "@/src/test/factories";
 
 vi.mock("@/src/server/db/prisma", () => ({ prisma: {} }));
-vi.mock("@/src/features/comments/service", () => ({ updateComment: vi.fn(), deleteComment: vi.fn() }));
+vi.mock("@/src/features/comments/service", () => ({
+  updateComment: vi.fn(),
+  deleteComment: vi.fn(),
+}));
 vi.mock("@/src/server/auth/session", async () => {
-  const actual = await vi.importActual<typeof import("@/src/server/auth/session")>(
-    "@/src/server/auth/session",
-  );
+  const actual = await vi.importActual<
+    typeof import("@/src/server/auth/session")
+  >("@/src/server/auth/session");
   return { ...actual, requireSession: vi.fn() };
 });
 
@@ -23,13 +26,18 @@ describe("/api/comments/[id] route", () => {
   it("updates a comment", async () => {
     const session = makeSession();
     vi.mocked(sessionModule.requireSession).mockResolvedValue(session as any);
-    vi.mocked(commentService.updateComment).mockResolvedValue({ id: COMMENT_ID } as any);
+    vi.mocked(commentService.updateComment).mockResolvedValue({
+      id: COMMENT_ID,
+    } as any);
 
-    const req = new NextRequest(`http://localhost:3000${apiRoutes.comments.item(COMMENT_ID)}`, {
-      method: "PUT",
-      body: JSON.stringify({ content: "Updated" }),
-      headers: { "content-type": "application/json" },
-    });
+    const req = new NextRequest(
+      `http://localhost:3000${apiRoutes.comments.item(COMMENT_ID)}`,
+      {
+        method: "PUT",
+        body: JSON.stringify({ content: "Updated" }),
+        headers: { "content-type": "application/json" },
+      },
+    );
 
     const res = await PUT(req, { params: { id: COMMENT_ID } });
 
@@ -40,9 +48,12 @@ describe("/api/comments/[id] route", () => {
     const session = makeSession();
     vi.mocked(sessionModule.requireSession).mockResolvedValue(session as any);
 
-    const req = new NextRequest(`http://localhost:3000${apiRoutes.comments.item(COMMENT_ID)}`, {
-      method: "DELETE",
-    });
+    const req = new NextRequest(
+      `http://localhost:3000${apiRoutes.comments.item(COMMENT_ID)}`,
+      {
+        method: "DELETE",
+      },
+    );
 
     const res = await DELETE(req, { params: { id: COMMENT_ID } });
 

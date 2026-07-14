@@ -9,9 +9,9 @@ import { makeSession } from "@/src/test/factories";
 vi.mock("@/src/server/db/prisma", () => ({ prisma: {} }));
 vi.mock("@/src/features/posts/service", () => ({ setPostLocked: vi.fn() }));
 vi.mock("@/src/server/auth/session", async () => {
-  const actual = await vi.importActual<typeof import("@/src/server/auth/session")>(
-    "@/src/server/auth/session",
-  );
+  const actual = await vi.importActual<
+    typeof import("@/src/server/auth/session")
+  >("@/src/server/auth/session");
   return { ...actual, requireSession: vi.fn() };
 });
 
@@ -28,9 +28,12 @@ describe("/api/posts/[id]/unlock route", () => {
       locked: false,
     } as any);
 
-    const req = new NextRequest(`http://localhost:3000${apiRoutes.posts.unlock(POST_ID)}`, {
-      method: "POST",
-    });
+    const req = new NextRequest(
+      `http://localhost:3000${apiRoutes.posts.unlock(POST_ID)}`,
+      {
+        method: "POST",
+      },
+    );
 
     const res = await POST(req, { params: { id: POST_ID } });
 

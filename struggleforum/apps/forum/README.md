@@ -146,7 +146,7 @@ apps/forum/Dockerfile
 The image uses Next.js standalone output:
 
 ```ts
-output: "standalone"
+output: "standalone";
 ```
 
 Docker Compose also includes a one-shot migration service:

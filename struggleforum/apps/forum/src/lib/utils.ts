@@ -29,5 +29,9 @@ export function normalizeOptionalText(value: string | null | undefined) {
 }
 
 export function extractMentions(content: string) {
-  return [...new Set(content.match(/@[a-zA-Z0-9_]+/g)?.map((item) => item.slice(1)) ?? [])];
+  return [
+    ...new Set(
+      content.match(/@[a-zA-Z0-9_]+/g)?.map((item) => item.slice(1)) ?? [],
+    ),
+  ];
 }

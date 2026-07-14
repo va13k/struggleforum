@@ -9,9 +9,9 @@ import { makeSession, makeUser } from "@/src/test/factories";
 vi.mock("@/src/server/db/prisma", () => ({ prisma: {} }));
 vi.mock("@/src/features/admin/service", () => ({ updateUserRole: vi.fn() }));
 vi.mock("@/src/server/auth/session", async () => {
-  const actual = await vi.importActual<typeof import("@/src/server/auth/session")>(
-    "@/src/server/auth/session",
-  );
+  const actual = await vi.importActual<
+    typeof import("@/src/server/auth/session")
+  >("@/src/server/auth/session");
   return { ...actual, requireSession: vi.fn(), requireAdmin: vi.fn() };
 });
 
@@ -24,13 +24,18 @@ describe("/api/admin/users/[id]/role route", () => {
     vi.mocked(sessionModule.requireSession).mockResolvedValue(
       makeSession({ user: makeUser({ role: "ADMIN" }) }) as any,
     );
-    vi.mocked(adminService.updateUserRole).mockResolvedValue(makeUser({ role: "ADMIN" }) as any);
+    vi.mocked(adminService.updateUserRole).mockResolvedValue(
+      makeUser({ role: "ADMIN" }) as any,
+    );
 
-    const req = new NextRequest(`http://localhost:3000${apiRoutes.admin.users.role(USER_ID)}`, {
-      method: "PATCH",
-      body: JSON.stringify({ role: "ADMIN" }),
-      headers: { "content-type": "application/json" },
-    });
+    const req = new NextRequest(
+      `http://localhost:3000${apiRoutes.admin.users.role(USER_ID)}`,
+      {
+        method: "PATCH",
+        body: JSON.stringify({ role: "ADMIN" }),
+        headers: { "content-type": "application/json" },
+      },
+    );
 
     const res = await PATCH(req, { params: { id: USER_ID } });
 

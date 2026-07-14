@@ -30,7 +30,9 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts",
     "**/*.css",
-    "tailwind.config.js"
-, "../../packages/ui/CTButton.tsx", "../../packages/ui/PageWrapper.tsx"  ],
+    "tailwind.config.js",
+    "../../packages/ui/CTButton.tsx",
+    "../../packages/ui/PageWrapper.tsx"
+  ],
   "exclude": ["node_modules"]
 }

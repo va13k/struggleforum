@@ -10,9 +10,9 @@ import { makeSession } from "@/src/test/factories";
 vi.mock("@/src/server/db/prisma", () => ({ prisma: {} }));
 vi.mock("@/src/features/auth/service", () => ({ updatePassword: vi.fn() }));
 vi.mock("@/src/server/auth/session", async () => {
-  const actual = await vi.importActual<typeof import("@/src/server/auth/session")>(
-    "@/src/server/auth/session",
-  );
+  const actual = await vi.importActual<
+    typeof import("@/src/server/auth/session")
+  >("@/src/server/auth/session");
   return { ...actual, requireSession: vi.fn() };
 });
 
@@ -23,11 +23,17 @@ describe("/api/account/password route", () => {
     const session = makeSession();
     vi.mocked(sessionModule.requireSession).mockResolvedValue(session as any);
 
-    const req = new NextRequest(`http://localhost:3000${apiRoutes.account.password}`, {
-      method: "PATCH",
-      body: JSON.stringify({ currentPassword: "oldpass123", newPassword: "newpass123" }),
-      headers: { "content-type": "application/json" },
-    });
+    const req = new NextRequest(
+      `http://localhost:3000${apiRoutes.account.password}`,
+      {
+        method: "PATCH",
+        body: JSON.stringify({
+          currentPassword: "oldpass123",
+          newPassword: "newpass123",
+        }),
+        headers: { "content-type": "application/json" },
+      },
+    );
 
     const res = await PATCH(req);
 
@@ -46,11 +52,17 @@ describe("/api/account/password route", () => {
       new UnauthorizedError("Current password is incorrect"),
     );
 
-    const req = new NextRequest(`http://localhost:3000${apiRoutes.account.password}`, {
-      method: "PATCH",
-      body: JSON.stringify({ currentPassword: "oldpass123", newPassword: "newpass123" }),
-      headers: { "content-type": "application/json" },
-    });
+    const req = new NextRequest(
+      `http://localhost:3000${apiRoutes.account.password}`,
+      {
+        method: "PATCH",
+        body: JSON.stringify({
+          currentPassword: "oldpass123",
+          newPassword: "newpass123",
+        }),
+        headers: { "content-type": "application/json" },
+      },
+    );
 
     const res = await PATCH(req);
 
