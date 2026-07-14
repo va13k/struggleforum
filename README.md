@@ -204,7 +204,3 @@ npm exec -w @struggleforum/forum prisma migrate dev
 npm exec -w @struggleforum/forum prisma migrate deploy
 npm run seed:forum
 ```
-
-## Project Planning
-
-The biggest current product gap is the missing forum browser UI. The backend/API foundation exists, but normal users still need pages for login, registration, post browsing, post details, comments, profiles, notifications, and admin moderation.
