@@ -181,7 +181,7 @@ export async function setCommentLocked(
     throw new NotFoundError("Comment not found");
   }
 
-  if (comment.authorId !== actor.id) {
+  if (comment.authorId !== actor.id && actor.role !== "ADMIN") {
     throw new ForbiddenError();
   }
 
