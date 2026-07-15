@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/src/server/db/prisma";
-import { requireSession } from "@/src/server/auth/session";
+import { withAuth, withPublicRoute } from "@/src/server/auth/route-handlers";
 import {
   parseJson,
   parseParams,
@@ -14,44 +14,40 @@ import {
 } from "@/src/features/comments/service";
 import { PostIdParamSchema } from "@/src/server/validation/posts";
 
-export async function GET(
-  _req: NextRequest,
-  { params }: { params: Promise<{ id: string }> | { id: string } },
-) {
-  const routeParams = await resolveRouteParams(params);
-  const parsedParams = parseParams(routeParams, PostIdParamSchema);
+export const GET = withPublicRoute<{ id: string }>(
+  "Comment list is public read access.",
+  async (_req, { params }) => {
+    const routeParams = await resolveRouteParams(params);
+    const parsedParams = parseParams(routeParams, PostIdParamSchema);
 
-  if (!parsedParams.ok) {
-    return parsedParams.res;
-  }
+    if (!parsedParams.ok) {
+      return parsedParams.res;
+    }
 
-  try {
-    const comments = await listCommentsByPost(prisma, parsedParams.data.id);
-    return NextResponse.json(comments);
-  } catch (error) {
-    return toErrorResponse(error, "Failed to fetch comments.");
-  }
-}
+    try {
+      const comments = await listCommentsByPost(prisma, parsedParams.data.id);
+      return NextResponse.json(comments);
+    } catch (error) {
+      return toErrorResponse(error, "Failed to fetch comments.");
+    }
+  },
+);
 
-export async function POST(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> | { id: string } },
-) {
-  const routeParams = await resolveRouteParams(params);
-  const parsedParams = parseParams(routeParams, PostIdParamSchema);
+export const POST = withAuth<{ id: string }>(
+  async (req: NextRequest, session, { params }) => {
+    const routeParams = await resolveRouteParams(params);
+    const parsedParams = parseParams(routeParams, PostIdParamSchema);
 
-  if (!parsedParams.ok) {
-    return parsedParams.res;
-  }
+    if (!parsedParams.ok) {
+      return parsedParams.res;
+    }
 
-  const body = await parseJson(req, CreateCommentBodySchema);
+    const body = await parseJson(req, CreateCommentBodySchema);
 
-  if (!body.ok) {
-    return body.res;
-  }
+    if (!body.ok) {
+      return body.res;
+    }
 
-  try {
-    const session = await requireSession(prisma, req);
     const comment = await createComment(
       prisma,
       {
@@ -63,7 +59,6 @@ export async function POST(
       body.data,
     );
     return NextResponse.json(comment, { status: 201 });
-  } catch (error) {
-    return toErrorResponse(error, "Failed to create comment.");
-  }
-}
+  },
+  { fallbackMessage: "Failed to create comment." },
+);

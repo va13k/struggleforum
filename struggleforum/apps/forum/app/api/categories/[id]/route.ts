@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/src/server/db/prisma";
-import { requireAdmin, requireSession } from "@/src/server/auth/session";
+import { withAdmin, withPublicRoute } from "@/src/server/auth/route-handlers";
 import {
   parseJson,
   parseParams,
@@ -17,70 +17,59 @@ import {
   UpdateCategoryBodySchema,
 } from "@/src/features/categories/validation";
 
-export async function GET(
-  _req: NextRequest,
-  { params }: { params: Promise<{ id: string }> | { id: string } },
-) {
-  const routeParams = await resolveRouteParams(params);
-  const parsedParams = parseParams(routeParams, CategoryIdParamSchema);
+export const GET = withPublicRoute<{ id: string }>(
+  "Category detail is public read access.",
+  async (_req, { params }) => {
+    const routeParams = await resolveRouteParams(params);
+    const parsedParams = parseParams(routeParams, CategoryIdParamSchema);
 
-  if (!parsedParams.ok) {
-    return parsedParams.res;
-  }
+    if (!parsedParams.ok) {
+      return parsedParams.res;
+    }
 
-  try {
-    const category = await getCategoryById(prisma, parsedParams.data.id);
-    return NextResponse.json(category);
-  } catch (error) {
-    return toErrorResponse(error, "Failed to fetch category.");
-  }
-}
+    try {
+      const category = await getCategoryById(prisma, parsedParams.data.id);
+      return NextResponse.json(category);
+    } catch (error) {
+      return toErrorResponse(error, "Failed to fetch category.");
+    }
+  },
+);
 
-export async function PUT(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> | { id: string } },
-) {
-  const routeParams = await resolveRouteParams(params);
-  const parsedParams = parseParams(routeParams, CategoryIdParamSchema);
+export const PUT = withAdmin<{ id: string }>(
+  async (req: NextRequest, _session, { params }) => {
+    const routeParams = await resolveRouteParams(params);
+    const parsedParams = parseParams(routeParams, CategoryIdParamSchema);
 
-  if (!parsedParams.ok) {
-    return parsedParams.res;
-  }
+    if (!parsedParams.ok) {
+      return parsedParams.res;
+    }
 
-  const body = await parseJson(req, UpdateCategoryBodySchema);
+    const body = await parseJson(req, UpdateCategoryBodySchema);
 
-  if (!body.ok) {
-    return body.res;
-  }
+    if (!body.ok) {
+      return body.res;
+    }
 
-  try {
-    const session = await requireSession(prisma, req);
-    requireAdmin(session);
     const category = await updateCategory(
       prisma,
       parsedParams.data.id,
       body.data,
     );
     return NextResponse.json(category);
-  } catch (error) {
-    return toErrorResponse(error, "Failed to update category.");
-  }
-}
+  },
+  { fallbackMessage: "Failed to update category." },
+);
 
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> | { id: string } },
-) {
-  const routeParams = await resolveRouteParams(params);
-  const parsedParams = parseParams(routeParams, CategoryIdParamSchema);
+export const DELETE = withAdmin<{ id: string }>(
+  async (_req, _session, { params }) => {
+    const routeParams = await resolveRouteParams(params);
+    const parsedParams = parseParams(routeParams, CategoryIdParamSchema);
 
-  if (!parsedParams.ok) {
-    return parsedParams.res;
-  }
+    if (!parsedParams.ok) {
+      return parsedParams.res;
+    }
 
-  try {
-    const session = await requireSession(prisma, req);
-    requireAdmin(session);
     const { deletedPostCount } = await deleteCategory(
       prisma,
       parsedParams.data.id,
@@ -89,7 +78,6 @@ export async function DELETE(
       message: "Category deleted successfully",
       deletedPostCount,
     });
-  } catch (error) {
-    return toErrorResponse(error, "Failed to delete category.");
-  }
-}
+  },
+  { fallbackMessage: "Failed to delete category." },
+);

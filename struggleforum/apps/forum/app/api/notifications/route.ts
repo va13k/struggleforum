@@ -1,15 +1,12 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { prisma } from "@/src/server/db/prisma";
-import { requireSession } from "@/src/server/auth/session";
-import { toErrorResponse } from "@/src/server/http/errors";
+import { withAuth } from "@/src/server/auth/route-handlers";
 import { listNotifications } from "@/src/features/notifications/service";
 
-export async function GET(req: NextRequest) {
-  try {
-    const session = await requireSession(prisma, req);
+export const GET = withAuth(
+  async (_req, session) => {
     const notifications = await listNotifications(prisma, session.user.id);
     return NextResponse.json({ notifications });
-  } catch (error) {
-    return toErrorResponse(error, "Failed to fetch notifications.");
-  }
-}
+  },
+  { fallbackMessage: "Failed to fetch notifications." },
+);

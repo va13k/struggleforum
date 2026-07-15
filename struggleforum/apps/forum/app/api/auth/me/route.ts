@@ -1,13 +1,9 @@
-import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/src/server/db/prisma";
-import { requireSession } from "@/src/server/auth/session";
-import { toErrorResponse } from "@/src/server/http/errors";
+import { NextResponse } from "next/server";
+import { withAuth } from "@/src/server/auth/route-handlers";
 
-export async function GET(req: NextRequest) {
-  try {
-    const session = await requireSession(prisma, req);
+export const GET = withAuth(
+  async (_req, session) => {
     return NextResponse.json(session.user);
-  } catch (error) {
-    return toErrorResponse(error, "Failed to fetch current user.");
-  }
-}
+  },
+  { fallbackMessage: "Failed to fetch current user." },
+);

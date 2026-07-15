@@ -25,7 +25,10 @@ describe("/api/categories route", () => {
   it("returns categories", async () => {
     vi.mocked(categoryService.listCategories).mockResolvedValue([] as any);
 
-    const res = await GET();
+    const req = new NextRequest(
+      `http://localhost:3000${apiRoutes.categories.collection}`,
+    );
+    const res = await GET(req);
 
     expect(res.status).toBe(200);
   });

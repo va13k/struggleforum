@@ -1,24 +1,19 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { prisma } from "@/src/server/db/prisma";
-import { requireSession } from "@/src/server/auth/session";
+import { withAuth } from "@/src/server/auth/route-handlers";
 import { parseParams, resolveRouteParams } from "@/src/server/http/validation";
-import { toErrorResponse } from "@/src/server/http/errors";
 import { setPostLocked } from "@/src/features/posts/service";
 import { PostIdParamSchema } from "@/src/server/validation/posts";
 
-export async function POST(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> | { id: string } },
-) {
-  const routeParams = await resolveRouteParams(params);
-  const parsedParams = parseParams(routeParams, PostIdParamSchema);
+export const POST = withAuth<{ id: string }>(
+  async (_req, session, { params }) => {
+    const routeParams = await resolveRouteParams(params);
+    const parsedParams = parseParams(routeParams, PostIdParamSchema);
 
-  if (!parsedParams.ok) {
-    return parsedParams.res;
-  }
+    if (!parsedParams.ok) {
+      return parsedParams.res;
+    }
 
-  try {
-    const session = await requireSession(prisma, req);
     const post = await setPostLocked(
       prisma,
       session.user,
@@ -26,7 +21,6 @@ export async function POST(
       true,
     );
     return NextResponse.json(post);
-  } catch (error) {
-    return toErrorResponse(error, "Failed to lock post.");
-  }
-}
+  },
+  { fallbackMessage: "Failed to lock post." },
+);

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/src/server/db/prisma";
-import { requireSession } from "@/src/server/auth/session";
+import { withAuth, withPublicRoute } from "@/src/server/auth/route-handlers";
 import {
   parseJson,
   parseParams,
@@ -17,44 +17,40 @@ import {
   UpdatePostBodySchema,
 } from "@/src/server/validation/posts";
 
-export async function GET(
-  _req: NextRequest,
-  { params }: { params: Promise<{ id: string }> | { id: string } },
-) {
-  const routeParams = await resolveRouteParams(params);
-  const parsedParams = parseParams(routeParams, PostIdParamSchema);
+export const GET = withPublicRoute<{ id: string }>(
+  "Post detail is public read access.",
+  async (_req, { params }) => {
+    const routeParams = await resolveRouteParams(params);
+    const parsedParams = parseParams(routeParams, PostIdParamSchema);
 
-  if (!parsedParams.ok) {
-    return parsedParams.res;
-  }
+    if (!parsedParams.ok) {
+      return parsedParams.res;
+    }
 
-  try {
-    const post = await getPostById(prisma, parsedParams.data.id);
-    return NextResponse.json(post);
-  } catch (error) {
-    return toErrorResponse(error, "Failed to fetch post.");
-  }
-}
+    try {
+      const post = await getPostById(prisma, parsedParams.data.id);
+      return NextResponse.json(post);
+    } catch (error) {
+      return toErrorResponse(error, "Failed to fetch post.");
+    }
+  },
+);
 
-export async function PUT(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> | { id: string } },
-) {
-  const routeParams = await resolveRouteParams(params);
-  const parsedParams = parseParams(routeParams, PostIdParamSchema);
+export const PUT = withAuth<{ id: string }>(
+  async (req: NextRequest, session, { params }) => {
+    const routeParams = await resolveRouteParams(params);
+    const parsedParams = parseParams(routeParams, PostIdParamSchema);
 
-  if (!parsedParams.ok) {
-    return parsedParams.res;
-  }
+    if (!parsedParams.ok) {
+      return parsedParams.res;
+    }
 
-  const body = await parseJson(req, UpdatePostBodySchema);
+    const body = await parseJson(req, UpdatePostBodySchema);
 
-  if (!body.ok) {
-    return body.res;
-  }
+    if (!body.ok) {
+      return body.res;
+    }
 
-  try {
-    const session = await requireSession(prisma, req);
     const post = await updatePost(
       prisma,
       session.user,
@@ -62,27 +58,21 @@ export async function PUT(
       body.data,
     );
     return NextResponse.json(post);
-  } catch (error) {
-    return toErrorResponse(error, "Failed to update post.");
-  }
-}
+  },
+  { fallbackMessage: "Failed to update post." },
+);
 
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> | { id: string } },
-) {
-  const routeParams = await resolveRouteParams(params);
-  const parsedParams = parseParams(routeParams, PostIdParamSchema);
+export const DELETE = withAuth<{ id: string }>(
+  async (_req, session, { params }) => {
+    const routeParams = await resolveRouteParams(params);
+    const parsedParams = parseParams(routeParams, PostIdParamSchema);
 
-  if (!parsedParams.ok) {
-    return parsedParams.res;
-  }
+    if (!parsedParams.ok) {
+      return parsedParams.res;
+    }
 
-  try {
-    const session = await requireSession(prisma, req);
     await deletePost(prisma, session.user, parsedParams.data.id);
     return NextResponse.json({ message: "Post deleted successfully" });
-  } catch (error) {
-    return toErrorResponse(error, "Failed to delete post.");
-  }
-}
+  },
+  { fallbackMessage: "Failed to delete post." },
+);
