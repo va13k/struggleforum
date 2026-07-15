@@ -11,33 +11,43 @@ import { ForbiddenError, UnauthorizedError } from "@/src/server/http/errors";
 
 export const SESSION_TTL_MS = 2 * 60 * 60 * 1000;
 
+/**
+ * Name of the httpOnly cookie that carries the session token. The token is
+ * never exposed to client-side JavaScript - it lives only in this cookie and
+ * in the `sessions` table.
+ */
+export const SESSION_COOKIE_NAME = "sf_session";
+
 export type AuthenticatedSession = SessionWithUser;
 
 export function generateSessionToken() {
   return randomBytes(32).toString("hex");
 }
 
-export function extractBearerToken(req: Pick<NextRequest, "headers">) {
-  const authorization = req.headers.get("authorization");
+/**
+ * Cookie attributes for setting the session cookie. `secure` is only enabled
+ * outside local development because local dev runs over plain HTTP - a
+ * `secure` cookie would silently never be sent by the browser there.
+ */
+export function sessionCookieOptions(maxAgeMs: number = SESSION_TTL_MS) {
+  return {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax" as const,
+    path: "/",
+    maxAge: Math.floor(maxAgeMs / 1000),
+  };
+}
 
-  if (!authorization) {
-    return null;
-  }
-
-  const [scheme, token] = authorization.split(" ");
-
-  if (scheme?.toLowerCase() !== "bearer" || !token) {
-    return null;
-  }
-
-  return token;
+export function extractSessionToken(req: Pick<NextRequest, "cookies">) {
+  return req.cookies.get(SESSION_COOKIE_NAME)?.value ?? null;
 }
 
 export async function requireSession(
   prisma: PrismaClient,
   req: NextRequest,
 ): Promise<AuthenticatedSession> {
-  const token = extractBearerToken(req);
+  const token = extractSessionToken(req);
 
   if (!token) {
     throw new UnauthorizedError();

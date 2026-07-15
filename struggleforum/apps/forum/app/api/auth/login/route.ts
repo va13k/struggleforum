@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/src/server/db/prisma";
 import { withPublicRoute } from "@/src/server/auth/route-handlers";
+import {
+  SESSION_COOKIE_NAME,
+  sessionCookieOptions,
+} from "@/src/server/auth/session";
 import { parseJson } from "@/src/server/http/validation";
 import { toErrorResponse } from "@/src/server/http/errors";
 import { login } from "@/src/features/auth/service";
@@ -17,7 +21,13 @@ export const POST = withPublicRoute(
 
     try {
       const result = await login(prisma, body.data);
-      return NextResponse.json(result);
+      const res = NextResponse.json({ user: result.user });
+      res.cookies.set(
+        SESSION_COOKIE_NAME,
+        result.token,
+        sessionCookieOptions(),
+      );
+      return res;
     } catch (error) {
       return toErrorResponse(error, "Failed to login.");
     }

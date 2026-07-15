@@ -7,13 +7,23 @@ const ALLOWED_ORIGINS = new Set(
     .filter(Boolean),
 );
 
-const ALLOW_NO_ORIGIN = true;
-
+/**
+ * Sessions are now an httpOnly cookie, so every cross-origin request that
+ * needs auth is a *credentialed* request. Credentialed requests can never
+ * use a wildcard `Access-Control-Allow-Origin: *` - browsers reject that
+ * combination outright - so allowed origins must be echoed back explicitly,
+ * and requests from an origin that isn't on the allowlist get no CORS
+ * headers at all (the browser blocks them client-side).
+ *
+ * Requests with no Origin header (same-origin navigation, server-to-server
+ * calls, curl) aren't subject to CORS in the first place, so nothing needs
+ * to be set for them.
+ */
 function getCorsOrigin(req: NextRequest) {
   const origin = req.headers.get("origin");
 
   if (!origin) {
-    return ALLOW_NO_ORIGIN ? "*" : null;
+    return null;
   }
 
   if (ALLOWED_ORIGINS.has(origin)) {
@@ -23,20 +33,22 @@ function getCorsOrigin(req: NextRequest) {
   return null;
 }
 
-function setCorsHeaders(res: NextResponse, origin: string) {
+function setCorsHeaders(res: NextResponse, origin: string | null) {
+  if (!origin) {
+    return;
+  }
+
   res.headers.set("Access-Control-Allow-Origin", origin);
+  res.headers.set("Access-Control-Allow-Credentials", "true");
   res.headers.set(
     "Access-Control-Allow-Methods",
     "GET,POST,PUT,PATCH,DELETE,OPTIONS",
   );
-  res.headers.set(
-    "Access-Control-Allow-Headers",
-    "Content-Type, Authorization",
-  );
+  res.headers.set("Access-Control-Allow-Headers", "Content-Type");
 }
 
 export function middleware(req: NextRequest) {
-  const corsOrigin = getCorsOrigin(req) ?? "*";
+  const corsOrigin = getCorsOrigin(req);
 
   if (req.method === "OPTIONS") {
     const res = new NextResponse(null, { status: 204 });

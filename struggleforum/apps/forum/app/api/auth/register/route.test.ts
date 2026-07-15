@@ -33,6 +33,13 @@ describe("/api/auth/register route", () => {
 
     expect(res.status).toBe(201);
     expect(authService.register).toHaveBeenCalled();
+
+    const setCookie = res.headers.get("set-cookie") ?? "";
+    expect(setCookie).toContain("sf_session=token");
+    expect(setCookie).toContain("HttpOnly");
+
+    const body = await res.json();
+    expect(body).toEqual({ user: { id: "user-1", username: "alice" } });
   });
 
   it("returns 400 for invalid input", async () => {

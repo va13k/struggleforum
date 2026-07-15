@@ -11,8 +11,11 @@ vi.mock("@/src/features/auth/service", () => ({ login: vi.fn() }));
 describe("/api/auth/login route", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("logs in a user", async () => {
-    vi.mocked(authService.login).mockResolvedValue({ token: "token" } as any);
+  it("logs in a user and sets the session cookie", async () => {
+    vi.mocked(authService.login).mockResolvedValue({
+      user: { id: "user-1", username: "alice" },
+      token: "session-token",
+    } as any);
 
     const req = new NextRequest(
       `http://localhost:3000${apiRoutes.auth.login}`,
@@ -29,6 +32,12 @@ describe("/api/auth/login route", () => {
     const res = await POST(req);
 
     expect(res.status).toBe(200);
+    const setCookie = res.headers.get("set-cookie") ?? "";
+    expect(setCookie).toContain("sf_session=session-token");
+    expect(setCookie).toContain("HttpOnly");
+
+    const body = await res.json();
+    expect(body).toEqual({ user: { id: "user-1", username: "alice" } });
   });
 
   it("returns 401 for invalid credentials", async () => {

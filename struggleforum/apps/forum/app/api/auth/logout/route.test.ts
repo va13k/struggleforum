@@ -28,7 +28,7 @@ describe("/api/auth/logout route", () => {
       `http://localhost:3000${apiRoutes.auth.logout}`,
       {
         method: "POST",
-        headers: { authorization: "Bearer token" },
+        headers: { cookie: "sf_session=session-token" },
       },
     );
 
@@ -39,6 +39,10 @@ describe("/api/auth/logout route", () => {
       expect.anything(),
       "session-token",
     );
+
+    const setCookie = res.headers.get("set-cookie") ?? "";
+    expect(setCookie).toContain("sf_session=");
+    expect(setCookie).toMatch(/Expires=Thu, 01 Jan 1970/);
   });
 
   it("returns 401 without a valid session", async () => {

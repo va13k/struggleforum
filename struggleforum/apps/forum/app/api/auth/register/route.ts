@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/src/server/db/prisma";
 import { withPublicRoute } from "@/src/server/auth/route-handlers";
+import {
+  SESSION_COOKIE_NAME,
+  sessionCookieOptions,
+} from "@/src/server/auth/session";
 import { parseJson } from "@/src/server/http/validation";
 import { toErrorResponse } from "@/src/server/http/errors";
 import { register } from "@/src/features/auth/service";
@@ -17,7 +21,13 @@ export const POST = withPublicRoute(
 
     try {
       const result = await register(prisma, body.data);
-      return NextResponse.json(result, { status: 201 });
+      const res = NextResponse.json({ user: result.user }, { status: 201 });
+      res.cookies.set(
+        SESSION_COOKIE_NAME,
+        result.token,
+        sessionCookieOptions(),
+      );
+      return res;
     } catch (error) {
       return toErrorResponse(error, "Failed to register user.");
     }
