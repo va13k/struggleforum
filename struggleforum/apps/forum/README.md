@@ -80,13 +80,18 @@ Health:
 
 ## Authentication
 
-The API currently uses bearer tokens.
+The API uses an httpOnly session cookie, not a bearer token. `POST /api/auth/login`
+and `POST /api/auth/register` set a `sf_session` cookie (httpOnly, `SameSite=Lax`,
+`Secure` in production) on the response; the browser sends it automatically on
+subsequent same-origin requests. The response body only ever contains `{ user }` -
+the raw session token is never exposed to client-side JavaScript, which closes off
+token theft via XSS. `POST /api/auth/logout` clears the cookie.
 
-Authenticated requests should include:
-
-```http
-Authorization: Bearer <token>
-```
+Cross-origin callers (a different origin than the forum app itself, e.g. a separate
+frontend) must set `CORS_ALLOWED_ORIGINS` to include their origin and send requests
+with `credentials: "include"` - the cookie is `SameSite=Lax`, so it's only sent on
+same-site requests and top-level navigations, not on cross-site fetches from an
+origin outside the same site.
 
 Sessions expire after two hours of inactivity. Each authenticated request refreshes session activity.
 
