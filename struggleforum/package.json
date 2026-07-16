@@ -23,5 +23,8 @@
   "devDependencies": {
     "eslint-config-prettier": "^10.1.8",
     "prettier": "^3.9.5"
+  },
+  "overrides": {
+    "postcss": "^8.5.10"
   }
 }
