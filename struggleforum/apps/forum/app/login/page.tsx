@@ -60,6 +60,7 @@ export default function Login() {
               type="email"
               name="email"
               id="email"
+              required
               onChange={(e) => setEmail(e.target.value)}
               className={`${baseInputClass} ${validBorder}`}
             />
@@ -77,6 +78,7 @@ export default function Login() {
               name="password"
               id="password"
               minLength={8}
+              required
               onChange={(e) => setPassword(e.target.value)}
               className={`${baseInputClass} ${validBorder}`}
             />

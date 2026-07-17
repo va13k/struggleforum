@@ -37,6 +37,16 @@ export default function Register() {
     e.preventDefault();
     setError(null);
 
+    if (username.length < 3 || username.length > 40) {
+      setError("Username must be between 3 and 40 characters");
+      return;
+    }
+
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters");
+      return;
+    }
+
     if (emailMismatch) {
       setError("Email addresses do not match");
       return;
@@ -84,6 +94,7 @@ export default function Register() {
               type="email"
               name="email"
               id="email"
+              required
               onChange={(e) => setEmail(e.target.value)}
               className={`${baseInputClass} ${emailTaken ? errorBorder : validBorder}`}
             />
@@ -100,6 +111,7 @@ export default function Register() {
               type="email"
               name="remail"
               id="remail"
+              required
               onChange={(e) => setConfirmEmail(e.target.value)}
               className={`${baseInputClass} ${
                 emailMismatch || emailTaken ? errorBorder : validBorder
@@ -120,6 +132,7 @@ export default function Register() {
               id="username"
               maxLength={40}
               minLength={3}
+              required
               onChange={(e) => setUsername(e.target.value)}
               className={`${baseInputClass} ${usernameTaken ? errorBorder : validBorder}`}
             />
@@ -137,6 +150,7 @@ export default function Register() {
               name="password"
               id="password"
               minLength={8}
+              required
               onChange={(e) => setPassword(e.target.value)}
               className={`${baseInputClass} ${validBorder}`}
             />
@@ -153,6 +167,7 @@ export default function Register() {
               type="password"
               name="rpassword"
               id="rpassword"
+              required
               onChange={(e) => setConfirmPassword(e.target.value)}
               className={`${baseInputClass} ${passwordMismatch ? errorBorder : validBorder}`}
             />
