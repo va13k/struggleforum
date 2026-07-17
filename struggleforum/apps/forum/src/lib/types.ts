@@ -36,3 +36,29 @@ export type Notification = {
   isRead: boolean;
   createdAt: string;
 };
+
+export type PostSummary = {
+  id: string;
+  authorId: string;
+  categoryId: string;
+  title: string;
+  content: string;
+  locked: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type CommentSummary = {
+  id: string;
+  postId: string;
+  authorId: string;
+  parentId: string | null;
+  content: string;
+  depth: number;
+  locked: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type UserWithPosts = UserPublic & { posts: PostSummary[] };
+export type UserWithComments = UserPublic & { comments: CommentSummary[] };
