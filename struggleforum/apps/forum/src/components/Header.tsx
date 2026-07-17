@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/src/features/auth/AuthProvider";
 import { apiFetch } from "@/src/lib/api-client";
@@ -12,6 +13,12 @@ const NOTIFICATION_POLL_MS = 60_000;
 export default function Header() {
   const { user, status, logout } = useAuth();
   const [unreadCount, setUnreadCount] = useState(0);
+  const pathname = usePathname();
+
+  const navLinkClass = (href: string) =>
+    pathname === href
+      ? "font-semibold text-sky-300"
+      : "text-white/90 hover:text-white";
 
   useEffect(() => {
     if (status !== "authenticated") {
@@ -50,7 +57,7 @@ export default function Header() {
         <div className="flex items-center gap-4">
           <Link
             href="/notifications"
-            className="relative text-lg text-white/90 hover:text-white"
+            className={`relative text-lg ${navLinkClass("/notifications")}`}
           >
             Notifications
             {unreadCount > 0 && (
@@ -61,7 +68,7 @@ export default function Header() {
           </Link>
           <Link
             href={`/users/${user.id}`}
-            className="flex items-center gap-2 text-white/90 hover:text-white"
+            className={`flex items-center gap-2 ${navLinkClass(`/users/${user.id}`)}`}
           >
             {user.avatarUrl && (
               // eslint-disable-next-line @next/next/no-img-element -- avatar URLs are arbitrary user-supplied domains, unknown ahead of time
@@ -85,13 +92,10 @@ export default function Header() {
         </div>
       ) : status === "unauthenticated" ? (
         <div className="flex items-center gap-4">
-          <Link href="/login" className="text-white/90 hover:text-white">
+          <Link href="/login" className={navLinkClass("/login")}>
             Login
           </Link>
-          <Link
-            href="/register"
-            className="font-semibold text-sky-300 hover:text-sky-200"
-          >
+          <Link href="/register" className={navLinkClass("/register")}>
             Register
           </Link>
         </div>
